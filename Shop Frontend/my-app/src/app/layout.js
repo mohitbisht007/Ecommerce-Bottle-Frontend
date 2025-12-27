@@ -1,3 +1,4 @@
+import Footer from "./components/Footer";
 import Header from "./components/Header";
 import "./globals.css"
 
@@ -12,6 +13,7 @@ export default function RootLayout({ children }) {
       <body style={{ margin: 0, fontFamily: "sans-serif" }}>
         <Header />
         {children}
+        <Footer/>
       </body>
     </html>
   );

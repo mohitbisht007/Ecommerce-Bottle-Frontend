@@ -11,7 +11,7 @@ export default function ProductCard({ product, onAdd }) {
 
   return (
     <article className="card">
-      <Link href={`/product/${product?.slug || ''}`} className="card-link">
+      <Link href={`/products/${product?.slug || ''}`} className="card-link">
         <div className="card-media">
           <img src={image} alt={title} />
         </div>
@@ -33,7 +33,7 @@ export default function ProductCard({ product, onAdd }) {
           Add
         </button>
 
-        <Link href={`/product/${product?.slug || ''}`} className="btn outline">
+        <Link href={`/products/${product?.slug || ''}`} className="btn outline">
           View
         </Link>
       </div>

@@ -2,6 +2,14 @@
 import CategoryBar from './components/CategoryBar';
 import FeaturedProducts from './components/FeaturedProducts';
 import ProductCard from './components/ProductCard';
+import HeroCarousel from './components/HeroCarousel';
+import SectionShowcase from './components/SectionShowcase';
+
+const IMAGES = [
+  'https://www.solara.in/cdn/shop/files/WhatsApp_Image_2025-11-05_at_5.46.28_PM.jpg?v=1762511484&width=1600',
+  'https://www.solara.in/cdn/shop/files/Luchn_box_banner_001_V1.jpg?v=1764398741&width=1600',
+  'https://www.solara.in/cdn/shop/files/Triply_Banner_3_002.jpg?v=1762251951&width=1900',
+];
 
 async function fetchNewArrivals(limit = 8) {
   try {
@@ -21,8 +29,13 @@ export default async function HomePage() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Welcome to Bottle Shop</h1>
-      <p className="small">Reusable bottles — eco-friendly and stylish.</p>
+      <HeroCarousel images={IMAGES} interval={4500} height="500px" />
+      <SectionShowcase
+        title="New Arrivals"
+        promoImage="https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        promoLink="/products?sort=newest"
+        products={newArrivals}
+      />
 
       {/* Categories bar */}
       <CategoryBar />
