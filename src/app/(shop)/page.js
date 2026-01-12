@@ -6,23 +6,34 @@ import HeroCarousel from '../components/HeroCarousel';
 import CategoryTray from '../components/CategoryTray';
 import PriceRangeTray from '../components/PriceRangeTray';
 
+export const metadata = {
+  title: "Premium Water Bottles | Insulated Steel & Glass | Bottle Shop",
+  description: "Shop high-quality, eco-friendly insulated water bottles. Keep your drinks cold for 24 hours. Free shipping on orders over ₹500.",
+  keywords: ["steel bottles", "insulated water bottle", "gym bottles", "eco-friendly"]
+};
+
 async function fetchHomeData() {
-  const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+  const base = process.env.NEXT_PUBLIC_API_URL;
   
-  // Fetch Banners and Products in parallel for speed
-  const [bannersRes, productsRes] = await Promise.all([
-    fetch(`${base}/storefront/banners`, { cache: 'no-store' }),
-    fetch(`${base}/products?limit=8&sort=newest`, { cache: 'no-store' })
-  ]);
+  try {
+    const [bannersRes, productsRes] = await Promise.all([
+      fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }), // Cache for 1 hour
+      fetch(`${base}/products?limit=8&sort=newest`, { cache: 'no-store' })
+    ]);
 
-  const banners = await bannersRes.json();
-  const productsJson = await productsRes.json();
+    if (!bannersRes.ok || !productsRes.ok) throw new Error("Failed to fetch data");
 
-  return {
-    // If banners is an array, we extract just the URLs for your current carousel
-    bannerImages: banners.length > 0 ? banners.map(b => b.imageUrl) : [],
-    newArrivals: productsJson.items || []
-  };
+    const banners = await bannersRes.json();
+    const productsJson = await productsRes.json();
+
+    return {
+      bannerImages: banners.length > 0 ? banners.map(b => b.imageUrl) : [],
+      newArrivals: productsJson.items || []
+    };
+  } catch (err) {
+    console.error("Home Data Error:", err);
+    return { bannerImages: [], newArrivals: [] }; // Fallback to empty
+  }
 }
 
 export default async function HomePage() {

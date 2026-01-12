@@ -8,17 +8,15 @@ export const metadata = {
   description: "Buy the best bottles",
 };
 
-export default function RootLayout({ children }) {
+export default function ShopLayout({ children }) {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, fontFamily: "sans-serif" }}
-      suppressHydrationWarning={true}
-      >
-        <Header />
-        <AnnouncementBar />
+    <>
+      <AnnouncementBar /> {/* Moved to top */}
+      <Header />
+      <main style={{ minHeight: '80vh' }}>
         {children}
-        <Footer/>
-      </body>
-    </html>
+      </main>
+      <Footer />
+    </>
   );
 }

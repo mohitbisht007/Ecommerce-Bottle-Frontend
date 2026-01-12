@@ -147,226 +147,6 @@ to{opacity:1;transform:translateY(0)}
 
 /* -------------------------------------------------------------------------------------------------------- */
 
-/* Product Detail Page */
-/* .modern-pdp {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  font-family: 'Inter', sans-serif;
-  color: #1a1a1a;
-}
-
-.pdp-layout {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 60px;
-  align-items: start;
-}
-
-/* Gallery Styling */
-/* .pdp-gallery {
-  position: sticky;
-  top: 100px;
-}
-
-.main-stage {
-  position: relative;
-  background: #f8f8f8;
-  border-radius: 24px;
-  overflow: hidden;
-  aspect-ratio: 1/1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stage-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stage-img:hover {
-  transform: scale(1.1);
-}
-
-.badge-discount {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: #ff3e6c;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 14px;
-  z-index: 2;
-}
-
-.thumb-strip {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-  overflow-x: auto;
-}
-
-.thumb-item {
-  width: 80px;
-  height: 80px;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  cursor: pointer;
-  overflow: hidden;
-  background: #f8f8f8;
-}
-
-.thumb-item.active {
-  border-color: #111;
-} */
-
-/* Info Styling */
-/* .product-title {
-  font-size: 36px;
-  font-weight: 800;
-  margin: 12px 0;
-  line-height: 1.2;
-}
-
-.price-stack {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.current-price {
-  font-size: 32px;
-  font-weight: 900;
-  color: #111;
-}
-
-.old-price {
-  font-size: 20px;
-  text-decoration: line-through;
-  color: #999;
-}
-
-.save-tag {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.offers-box {
-  background: #f1f3f5;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 30px 0;
-}
-
-.offer-item {
-  display: flex;
-  gap: 15px;
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.purchase-zone {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 40px;
-}
-
-.qty-selector {
-  display: flex;
-  align-items: center;
-  background: #f8f8f8;
-  border-radius: 50px;
-  padding: 5px;
-}
-
-.qty-selector button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: white;
-  cursor: pointer;
-  font-size: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.qty-selector span {
-  width: 40px;
-  text-align: center;
-  font-weight: 700;
-}
-
-.buy-btn {
-  flex: 1;
-  background: #111;
-  color: white;
-  border-radius: 50px;
-  border: none;
-  font-weight: 700;
-  font-size: 18px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.buy-btn:hover {
-  opacity: 0.9;
-}
-
-.wish-btn {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wish-btn.active {
-  color: #ff3e6c;
-  background: #fff0f3;
-  border-color: #ff3e6c;
-}
-
-/* Responsive */
-/* @media (max-width: 968px) {
-  .pdp-layout {
-    grid-template-columns: 1fr;
-  }
-  .pdp-gallery {
-    position: relative;
-    top: 0;
-  }
-  .product-title {
-    font-size: 28px;
-  }
-  .purchase-zone {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    padding: 15px 20px;
-    margin-bottom: 0;
-    box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
-    z-index: 100;
-  }
-} */
-
-/* -------------------------------------------------------------------------------------------------------- */
-
 /* Login Signup */
 
 .auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#E0E7FF;padding:20px}
@@ -1082,6 +862,378 @@ to{transform:rotate(360deg)}
 
 /* -------------------------------------------------------------------------------------------------------- */
 
+/* =========================
+   ROOT LAYOUT
+========================= */
+.shop-root {
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1280px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+.shop-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 70px;
+  padding-top: 32px;
+  padding-bottom: 80px;
+}
+
+/* SIDEBAR (Desktop) */
+.shop-sidebar {
+  position: sticky;
+  top: 96px;
+  background: #fff;
+  border: 1px solid #eeeeee;
+  border-radius: 18px;
+  padding: 20px;
+  height: fit-content;
+}
+
+.sidebar-top, .sidebar-bottom-mobile {
+  display: none;
+}
+
+/* FILTER COMPONENTS */
+.filter-section {
+  border-bottom: 1px solid #f1f1f1;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+.filter-section h3 {
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.luxury-price-section {
+  padding-top: 10px;
+}
+
+/* Numeric Display Styling */
+.price-input-display {
+  display: flex;
+  align-items: center;
+  background: #f4f4f4;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.currency-symbol {
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  margin-right: 2px;
+}
+
+.price-num-input {
+  background: transparent;
+  border: none;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  outline: none;
+  font-family: inherit;
+  margin-right: 10px;
+}
+
+/* Custom Slider Track */
+.slider-container {
+  position: relative;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.luxury-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb; /* The empty track color */
+  border-radius: 10px;
+  outline: none;
+  position: relative;
+  z-index: 2;
+}
+
+/* The Progress Bar (Filled part) */
+.slider-progress {
+  position: absolute;
+  height: 4px;
+  background: #000; /* The filled track color */
+  border-radius: 10px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* The Handle (Thumb) - Chrome/Safari */
+.luxury-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: #000;
+  border: 4px solid #fff; /* White ring for luxury look */
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.luxury-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* The Handle (Thumb) - Firefox */
+.luxury-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #000;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Limits Labels */
+.slider-limits {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.limit-box {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+  background: #fafafa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #f0f0f0;
+}
+
+.preference-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Individual Row */
+.pref-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f9f9f9;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pref-row:hover {
+  background: #f3f3f3;
+  border-color: #e0e0e0;
+}
+
+.pref-row.active {
+  background: #fff;
+  border-color: #000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Info Text */
+.pref-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pref-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.pref-desc {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* The Switch Logic */
+.modern-switch {
+  width: 38px;
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 20px;
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+.switch-handle {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Active State for Switch */
+.pref-row.active .modern-switch {
+  background: #000; /* Black for luxury branding */
+}
+
+.pref-row.active .switch-handle {
+  transform: translateX(18px);
+}
+
+.collection-list { display: flex; flex-direction: column; gap: 6px; }
+.collection-item { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 8px 10px; font-size: 14px; border-radius: 8px; border: none; 
+  background: transparent; cursor: pointer; color: #444; 
+}
+.collection-item.active { background: #000; color: #fff; }
+
+.swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; }
+.color-dot.selected { transform: scale(1.25); border: 2px solid #000; }
+
+.capacity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.capacity-pill { padding: 9px; font-size: 13px; border-radius: 10px; border: 1px solid #e5e5e5; background: #fff; cursor: pointer; }
+.capacity-pill.active { background: #000; color: #fff; border-color: #000; }
+
+/* DESKTOP HEADER */
+.shop-header-desktop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.shop-title { font-size: 22px; font-weight: 700; }
+.sort-wrapper { display: flex; align-items: center; gap: 10px; background: #f7f7f7; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
+.sort-wrapper select { border: none; background: transparent; font-weight: 600; outline: none; }
+
+/* PRODUCT GRID */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+
+/* MOBILE NAVIGATION BAR (The Filter/Sort Pill) */
+.mobile-filter-bar {
+  display: none; /* Default hidden for Desktop */
+}
+
+/* =========================
+   MOBILE STYLES (Max 991px)
+========================= */
+@media (max-width: 991px) {
+  .shop-layout { grid-template-columns: 1fr; }
+  .shop-header-desktop { display: none; }
+
+  /* 1. The Floating Action Bar */
+  .mobile-filter-bar {
+    display: flex;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: #000;
+    color: #fff;
+    align-items: center;
+    justify-content: space-around;
+    padding: 12px;
+    border-radius: 50px;
+    z-index: 1000;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  }
+
+  .m-btn { background: none; border: none; color: #fff; display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
+  .v-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+  .m-sort {background: black;  border: none; font-weight: 600; outline: none; }
+  .m-sort option {color: #fff; background: #000; font-family: fantasy; }
+
+  /* 2. The Drawer Sidebar */
+  .shop-sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -110%; /* Hidden off-screen */
+    width: 100%;
+    height: 85vh;
+    background: #fff;
+    z-index: 9999 !important; /* Above everything */
+    transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 25px 25px 0 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    visibility: hidden;
+    overflow-y: scroll;
+  }
+
+  .shop-sidebar.drawer-active {
+    bottom: 0;
+    visibility: visible;
+  }
+
+  .sidebar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .sidebar-scroll-area {
+    flex: 1;
+    overflow-y: auto; /* Enable vertical scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+    padding: 20px;
+    padding-bottom: 120px; /* IMPORTANT: Add extra space so the bottom button doesn't cover the last filter */
+  }
+
+  /* Ensure the container doesn't squash the content */
+  .filter-container {
+    display: flex;
+    flex-direction: column;
+    min-height: min-content; 
+  }
+
+  .sidebar-bottom-mobile {
+    display: block;
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    background: #fff;
+  }
+
+  .view-results-btn {
+    width: 100%;
+    padding: 16px;
+    background: #000;
+    color: #fff;
+    border-radius: 12px;
+    font-weight: 700;
+    border: none;
+  }
+
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  .overlay-dim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998 !important;
+  }
+}
 
 
 

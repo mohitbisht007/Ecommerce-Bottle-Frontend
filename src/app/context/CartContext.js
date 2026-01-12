@@ -1,30 +1,46 @@
 "use client";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const isMounted = useRef(false); // To prevent overwriting storage on load
 
+    // 1. Load cart on initial mount
     useEffect(() => {
         const savedCart = localStorage.getItem("cart");
-        if (savedCart) setCartItems(JSON.parse(savedCart));
+        if (savedCart) {
+            try {
+                setCartItems(JSON.parse(savedCart));
+            } catch (error) {
+                console.error("Failed to parse cart:", error);
+            }
+        }
+        isMounted.current = true;
     }, []);
 
+    // 2. Save cart ONLY after initial mount and when cartItems change
     useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cartItems));
+        if (isMounted.current) {
+            localStorage.setItem("cart", JSON.stringify(cartItems));
+        }
     }, [cartItems]);
 
     const addToCart = (product, quantity, color, capacity) => {
         setCartItems((prev) => {
             const existingItem = prev.find(item =>
-                item._id === product._id && item.color === color && item.capacity === capacity
+                item._id === product._id && 
+                item.color === color && 
+                item.capacity === capacity
             );
 
             if (existingItem) {
                 return prev.map(item =>
-                    item === existingItem ? { ...item, quantity: item.quantity + quantity } : item
+                    item === existingItem 
+                        ? { ...item, quantity: item.quantity + quantity } 
+                        : item
                 );
             }
             return [...prev, { ...product, quantity, color, capacity }];
@@ -32,12 +48,10 @@ export const CartProvider = ({ children }) => {
         setIsCartOpen(true);
     };
 
-    // --- ADD THIS FUNCTION ---
     const updateQuantity = (index, delta) => {
         setCartItems((prev) =>
             prev.map((item, i) => {
                 if (i === index) {
-                    // Calculate new quantity but don't let it go below 1
                     const newQty = Math.max(1, item.quantity + delta);
                     return { ...item, quantity: newQty };
                 }
@@ -55,6 +69,9 @@ export const CartProvider = ({ children }) => {
         localStorage.removeItem("cart");
     };
 
+    // Calculate count for the Header badge (e.g., 3 items total)
+    const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
     const cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
     return (
@@ -65,8 +82,9 @@ export const CartProvider = ({ children }) => {
             addToCart,
             clearCart,
             removeFromCart,
-            updateQuantity, // --- MAKE SURE THIS IS HERE ---
-            cartTotal
+            updateQuantity,
+            cartTotal,
+            cartCount // Useful for the little red dot on the cart icon
         }}>
             {children}
         </CartContext.Provider>
