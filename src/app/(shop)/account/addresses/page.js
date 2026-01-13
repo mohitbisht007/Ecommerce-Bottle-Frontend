@@ -34,14 +34,11 @@ export default function AddressPage() {
 
     const fetchAddresses = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/me`,
-          {
-            headers: {
-              Authorization: `JWT ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
+          headers: {
+            Authorization: `JWT ${token}`,
+          },
+        });
 
         const contentType = res.headers.get("content-type");
         if (!contentType?.includes("application/json")) {
@@ -65,7 +62,8 @@ export default function AddressPage() {
 
   // Delete address
   const handleDelete = async (addressId) => {
-    if (!window.confirm("Are you sure you want to remove this address?")) return;
+    if (!window.confirm("Are you sure you want to remove this address?"))
+      return;
 
     try {
       const token = localStorage.getItem("token");
@@ -132,9 +130,7 @@ export default function AddressPage() {
           ) : (
             addresses.map((addr, index) => (
               <div key={addr._id} className="address-card">
-                {index === 0 && (
-                  <span className="default-badge">Default</span>
-                )}
+                {index === 0 && <span className="default-badge">Default</span>}
 
                 <div className="address-details">
                   <p className="address-name">
