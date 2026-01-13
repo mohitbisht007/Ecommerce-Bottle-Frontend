@@ -1,10 +1,12 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { Suspense } from "react";
-import dynamic from 'next/dynamic';
+import dynamicImport from "next/dynamic";
 
 // 1. Keep the dynamic import with SSR disabled
-const AddressFormPage = dynamic(
+const AddressFormPage = dynamicImport(
   () => import('@/app/(shop)/components/AddressForm'),
   { ssr: false }
 );

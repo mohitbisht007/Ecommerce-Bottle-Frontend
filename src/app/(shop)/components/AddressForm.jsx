@@ -10,11 +10,17 @@ const INDIAN_STATES = [
 export default function AddressFormPage() {
   const router = useRouter();
   const params = useParams(); 
-  const isEdit = !!params.id;
+const isEdit = params?.id !== undefined;
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
+
+  // 1. Handle Mounting & Page Title
+  useEffect(() => {
+    setMounted(true);
+    document.title = isEdit ? "Edit Address | BouncyBucket" : "Add New Address | BouncyBucket";
+  }, [isEdit]);
   
   const [form, setForm] = useState({
     name: "",
@@ -28,11 +34,8 @@ export default function AddressFormPage() {
     isDefault: false,
   });
 
-  // 1. Handle Mounting & Page Title
-  useEffect(() => {
-    setMounted(true);
-    document.title = isEdit ? "Edit Address | BouncyBucket" : "Add New Address | BouncyBucket";
-  }, [isEdit]);
+
+  
 
   // 2. Fetch data if in Edit Mode
   useEffect(() => {
