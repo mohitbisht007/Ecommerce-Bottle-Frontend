@@ -1,20 +1,7 @@
-"use client";
+export const dynamic = "force-dynamic";
 
-import { Suspense } from "react";
-import dynamic from 'next/dynamic';
+import AddressPageClient from "./AddressPageClient";
 
-// 1. Keep the dynamic import with SSR disabled
-const AddressFormPage = dynamic(
-  () => import('@/app/(shop)/components/AddressForm'),
-  { ssr: false }
-);
-
-export default function AddAddressPage() {
-  return (
-    // 2. Wrap in Suspense. This is the "magic" that fixes prerender errors
-    // for components that use params/searchParams/hooks.
-    <Suspense fallback={<div className="loading-state">Loading Form...</div>}>
-      <AddressFormPage />
-    </Suspense>
-  );
+export default function Page() {
+  return <AddressPageClient />;
 }
