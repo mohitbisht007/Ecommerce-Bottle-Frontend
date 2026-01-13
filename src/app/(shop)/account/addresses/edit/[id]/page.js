@@ -1,16 +1,20 @@
 "use client";
 
+import { Suspense } from "react";
 import dynamic from 'next/dynamic';
 
-// This is the ONLY way to completely stop the build worker from executing your component
+// 1. Keep the dynamic import with SSR disabled
 const AddressFormPage = dynamic(
   () => import('@/app/(shop)/components/AddressForm'),
-  { 
-    ssr: false,
-    loading: () => <div className="loading-state">Loading Form...</div> 
-  }
+  { ssr: false }
 );
 
 export default function AddAddressPage() {
-  return <AddressFormPage />;
+  return (
+    // 2. Wrap in Suspense. This is the "magic" that fixes prerender errors
+    // for components that use params/searchParams/hooks.
+    <Suspense fallback={<div className="loading-state">Loading Form...</div>}>
+      <AddressFormPage />
+    </Suspense>
+  );
 }
