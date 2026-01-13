@@ -36,14 +36,30 @@ export default function AddressFormPage() {
 
   // 2. Fetch data if in Edit Mode
   useEffect(() => {
+    // Check for both mounted and isEdit
     if (!mounted || !isEdit) return;
 
     const fetchCurrentAddress = async () => {
-      const token = localStorage.getItem("token");
+      // 1. Safety Check: Only run if localStorage is available
+      const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+      
+      // 2. Don't fetch if there is no token (prevents HTML error responses)
+      if (!token) {
+        setFetching(false);
+        return;
+      }
+
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
           headers: { Authorization: `JWT ${token}` },
         });
+
+        // 3. Check content type before parsing
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+           throw new TypeError("Oops, we didn't get JSON from the server!");
+        }
+
         const data = await res.json();
         if (res.ok) {
           const target = data.user.addresses.find(a => a._id === params.id);
@@ -62,7 +78,7 @@ export default function AddressFormPage() {
           }
         }
       } catch (err) {
-        console.error("Error fetching address details");
+        console.error("Error fetching address details:", err);
       } finally {
         setFetching(false);
       }
