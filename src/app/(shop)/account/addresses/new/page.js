@@ -1,11 +1,16 @@
 "use client";
 
-import AddressFormPage from "@/app/(shop)/components/AddressForm";
+import dynamic from 'next/dynamic';
 
-export const dynamic = "force-dynamic";
+// This is the ONLY way to completely stop the build worker from executing your component
+const AddressFormPage = dynamic(
+  () => import('@/app/(shop)/components/AddressForm'),
+  { 
+    ssr: false,
+    loading: () => <div className="loading-state">Loading Form...</div> 
+  }
+);
 
 export default function AddAddressPage() {
-  return (
-      <AddressFormPage />
-    );
+  return <AddressFormPage />;
 }
