@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade, Navigation } from "swiper/modules";
 import Link from "next/link";
+import Image from "next/image";
 
 // Import Swiper styles
 import "swiper/css";
@@ -10,28 +10,10 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import "swiper/css/navigation";
 
-export default function HeroCarousel() {
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`);
-        const data = await res.json();
-        // Only show active banners
-        setBanners(data.filter((b) => b.active !== false));
-      } catch (err) {
-        console.error("Hero fetch failed", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBanners();
-  }, []);
-
-  if (loading || banners.length === 0) {
-    return <div className="hero-skeleton"></div>; // Simple gray box while loading
+export default function HeroCarousel({ banners }) {
+  // Safety check for SSR and empty data
+  if (!banners || banners.length === 0) {
+    return <div className="hero-section hero-skeleton"></div>;
   }
 
   return (
@@ -39,26 +21,40 @@ export default function HeroCarousel() {
       <Swiper
         modules={[Autoplay, Pagination, EffectFade, Navigation]}
         effect="fade"
-        loop={true}
+        loop={banners.length > 1}
         speed={1000}
-        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        autoplay={{ delay: 4000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         navigation={true}
         className="mySwiper"
       >
-        {banners.map((banner) => (
-          <SwiperSlide key={banner._id}>
-            <div 
-              className="hero-slide-content"
-              style={{ 
-                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.2)), url(${banner.imageUrl})` 
-              }}
-            >
-              <div className="container">
+        {banners.map((banner, index) => (
+          <SwiperSlide key={banner._id || index}>
+            <div className="hero-slide-wrapper">
+              {/* NEXT.JS OPTIMIZED IMAGE - Replaces CSS Background */}
+              <Image
+                src={banner.imageUrl}
+                alt={banner.title || "Premium Water Bottles"}
+                fill
+                priority={index === 0} // Highest priority for the first slide (LCP Fix)
+                className="hero-img"
+                sizes="100vw"
+                quality={90}
+              />
+              
+              {/* Gradient Overlay maintained from your previous style */}
+              <div className="hero-overlay-gradient"></div>
+
+              <div className="container hero-content-container">
                 <div className="hero-text-box">
                   <span className="hero-subtitle">{banner.subtitle}</span>
-                  <h1 className="hero-title">{banner.title}</h1>
-                  <Link href={banner.link} className="hero-cta-btn">
+                  {/* SEO: Only the first slide gets an H1 */}
+                  {index === 0 ? (
+                    <h1 className="hero-title">{banner.title}</h1>
+                  ) : (
+                    <h2 className="hero-title">{banner.title}</h2>
+                  )}
+                  <Link href={banner.link || "/shop"} className="hero-cta-btn">
                     Shop Collection
                   </Link>
                 </div>

@@ -8,11 +8,15 @@ export const metadata = {
   description: "Buy the best bottles",
 };
 
-export default function ShopLayout({ children }) {
+export default async function ShopLayout({ children }) {
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
+  const data = await res.json();
+
   return (
     <>
       <AnnouncementBar /> {/* Moved to top */}
-      <Header />
+      <Header initialCategories={data.categories} />
       <main style={{ minHeight: '80vh' }}>
         {children}
       </main>

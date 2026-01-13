@@ -1,41 +1,65 @@
 import ProductClient from "@/app/components/ProductClient";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {
-  // NEXT.JS 15 FIX: Await params
-  const { slug } = await params; 
-  
+  const { slug } = await params;
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`);
-    
-    // Check if the response is actually JSON before parsing
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${slug}`);
     if (!res.ok) return { title: "Product Not Found" };
-    
     const product = await res.json();
+
     return {
-      title: `${product.title} | Bottle Shop`,
+      title: `${product.title} | BouncyBucket`,
       description: product.description?.slice(0, 160),
+      openGraph: {
+        images: [product.variants[0]?.images[0]],
+      },
     };
   } catch (error) {
-    return { title: "Bottle Shop" };
+    return { title: "BouncyBucket" };
   }
 }
 
 export default async function Page({ params }) {
-  // NEXT.JS 15 FIX: Await params
-  const { slug } = await params; 
-  
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/${slug}`;
-  console.log("Fetching from:", apiUrl); // Debug: Check your terminal for this URL
+  const { slug } = await params;
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${slug}`, { 
+    cache: 'no-store' 
+  });
 
-  const res = await fetch(apiUrl, { cache: 'no-store' });
+  if (!res.ok) return notFound();
+  const product = await res.json();
 
-  // CHECK: If API fails, handle it gracefully so we don't get the JSON error
-  if (!res.ok) {
-     return <div className="container p-20">Product not found or API is down.</div>;
-  }
+  // JSON-LD for Google Rich Snippets
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.title,
+    "image": product.variants[0]?.images[0],
+    "description": product.description,
+    "brand": { "@type": "Brand", "name": "BouncyBucket" },
+    "offers": {
+      "@type": "Offer",
+      "price": product.price,
+      "priceCurrency": "INR",
+      "availability": product.variants[0]?.stock > 0 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
+      "url": `${process.env.NEXT_PUBLIC_CLIENT_URL}/product/${slug}`
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating || 5,
+      "reviewCount": product.reviewsCount || 1
+    }
+  };
 
-  const initialProduct = await res.json();
-  console.log(initialProduct)
-
-  return <ProductClient initialProduct={initialProduct} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductClient initialProduct={product} />
+    </>
+  );
 }

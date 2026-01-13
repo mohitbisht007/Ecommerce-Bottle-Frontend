@@ -22,10 +22,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+    // Add suppressHydrationWarning here
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} style={{ margin: 0 }}>
+      {/* Also add it to the body to ignore extension-injected attributes */}
+      <body 
+        className={inter.className} 
+        style={{ margin: 0 }} 
+        suppressHydrationWarning
+      >
         <CartProvider>
-          {/* CartSidebar stays here so it can be toggled from anywhere */}
           <CartSidebar />
           {children}
         </CartProvider>

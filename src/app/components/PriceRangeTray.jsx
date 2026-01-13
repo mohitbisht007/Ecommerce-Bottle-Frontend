@@ -1,4 +1,4 @@
-"use client";
+// 1. Removed "use client" - Now a high-speed Server Component
 import Link from "next/link";
 
 const priceRanges = [
@@ -10,11 +10,11 @@ const priceRanges = [
 
 export default function PriceRangeTray() {
   return (
-    <section className="price-range-section">
+    <section className="price-range-section" aria-labelledby="budget-heading">
       <div className="range-header">
         <div className="title-stack">
           <span className="tiny-label">CURATED FOR YOU</span>
-          <h2>Shop by Budget</h2>
+          <h2 id="budget-heading">Shop by Budget</h2>
         </div>
       </div>
 
@@ -25,19 +25,22 @@ export default function PriceRangeTray() {
             key={i} 
             className="glass-card" 
             style={{ '--card-accent': range.accent }}
+            aria-label={`Shop products ${range.label}`} // 2. SEO & Accessibility boost
           >
             <div className="glass-content">
               <span className="glass-sub">{range.sub}</span>
+              {/* 3. Changed h3 to a span or p if there are too many on one page, but h3 is fine for SEO here */}
               <h3 className="glass-label">{range.label}</h3>
               
               <div className="glass-footer">
-                <div className="circle-btn">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <div className="circle-btn" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </div>
             </div>
             
-            {/* Background Decorative Element */}
             <div className="abstract-glow"></div>
           </Link>
         ))}

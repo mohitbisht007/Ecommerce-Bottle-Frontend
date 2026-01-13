@@ -130,11 +130,35 @@ function BannerManager() {
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+
   // 1. Fetch Banners on load
   const fetchBanners = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`);
     const data = await res.json();
     setBanners(data);
+  };
+
+  const deleteBanner = async (id) => {
+    if (!confirm("Are you sure you want to delete this banner?")) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `JWT ${localStorage.getItem("token")}`
+        },
+      });
+
+      if (res.ok) {
+        setBanners(banners.filter(b => b._id !== id));
+        fetchBanners(); 
+      } else {
+        alert("Failed to delete banner.");
+      }
+    } catch (err) {
+      console.error("Error deleting banner:", err);
+      alert("An error occurred while deleting.");
+    }
   };
 
   useEffect(() => { fetchBanners(); }, []);
@@ -198,7 +222,7 @@ function BannerManager() {
               <p>Link: {b.link} | Order: {b.order}</p>
             </div>
             <div className="banner-actions">
-               <button className="delete-icon" onClick={() => {/* add delete call */}}>🗑️</button>
+               <button className="delete-icon" onClick={() => {deleteBanner(b._id)}}>🗑️</button>
             </div>
           </div>
         ))}
@@ -216,7 +240,7 @@ function BannerManager() {
             <form onSubmit={handleBannerSubmit}>
               <div className="form-group">
                 <label>Banner Title</label>
-                <input name="title" required placeholder="e.g. Summer Collection" />
+                <input name="title" placeholder="e.g. Summer Collection" />
               </div>
               <div className="form-group">
                 <label>Subtitle</label>

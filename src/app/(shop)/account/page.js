@@ -1,4 +1,3 @@
-// src/app/account/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,17 +6,26 @@ import AccountSidebar from "@/app/components/AccountSidebar";
 
 export default function MyProfilePage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [form, setForm] = useState({ name: "", phone: "" });
 
+  // 1. Handle Mounting and Title
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    setMounted(true);
+    // Setting the title here ensures it changes once the component loads
+    document.title = "My Profile | BouncyBucket";
+  }, []);
 
+  // 2. Authentication and Profile Fetching
+  useEffect(() => {
+    if (!mounted) return;
+
+    const token = localStorage.getItem("token");
     if (!token) {
-      console.log("No token found, redirecting...");
       router.replace("/login");
       return;
     }
@@ -25,19 +33,14 @@ export default function MyProfilePage() {
     const fetchProfile = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
-          method: 'GET',
           headers: {
-            // FIX: Try 'Bearer' instead of 'JWT' if your backend uses standard JWT strategy
             'Authorization': `JWT ${token}`,
             'Content-Type': 'application/json'
           },
         });
 
         const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message || "Session expired");
-        }
+        if (!res.ok) throw new Error(data.message || "Unauthorized");
 
         setUser(data.user);
         setForm({
@@ -45,18 +48,14 @@ export default function MyProfilePage() {
           phone: data.user.phone || ""
         });
       } catch (err) {
-        console.error("Profile fetch error:", err.message);
-        // Only remove token if the error is actually an auth failure
-        if (err.message.includes("Unauthorized") || err.message.includes("Session")) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("bottle_user");
-          router.replace("/login");
-        }
+        localStorage.removeItem("token");
+        localStorage.removeItem("bottle_user");
+        router.replace("/login");
       }
     };
 
     fetchProfile();
-  }, [router]);
+  }, [mounted, router]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -67,7 +66,7 @@ export default function MyProfilePage() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `JWT ${token}` // FIX: Matches the fetchProfile header
+          "Authorization": `JWT ${token}`
         },
         body: JSON.stringify(form),
       });
@@ -79,7 +78,6 @@ export default function MyProfilePage() {
       setEditing(false);
       setMessage({ text: "Profile updated successfully ✔", type: "success" });
 
-      // Sync with global user state
       localStorage.setItem("bottle_user", JSON.stringify(data.user));
       window.dispatchEvent(new CustomEvent("bottle_auth_changed"));
 
@@ -90,27 +88,38 @@ export default function MyProfilePage() {
     }
   };
 
-  if (!user) return <div className="profile-loading">Loading your profile...</div>;
+  // Prevent rendering until mounted to avoid hydration mismatch
+  if (!mounted || !user) {
+    return (
+      <div className="profile-loading-container">
+        <div className="spinner"></div>
+        <p>Verifying session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-container">
-      {/* Sidebar Navigation (Desktop) */}
-      <AccountSidebar />
+      {/* FIX: REMOVED <head> tag from here. 
+         SEO is handled by public/robots.txt 
+         Title is handled by document.title in useEffect
+      */}
+      
+      <AccountSidebar active="profile" />
 
-      {/* Main Content */}
       <main className="profile-content">
-        <div className="content-header">
+        <header className="content-header">
           <h1>Account Settings</h1>
           <p>Update your personal details and manage your account</p>
-        </div>
+        </header>
 
         {message.text && (
-          <div className={`alert-msg ${message.type}`}>{message.text}</div>
+          <div className={`alert-msg ${message.type}`} role="alert">
+            {message.text}
+          </div>
         )}
 
-        {/* Info Card */}
-        <div className="info-card">
-
+        <section className="info-card">
           <div className="account-card-top">
             <div className="title-group">
               <h2>Personal Information</h2>
@@ -119,70 +128,73 @@ export default function MyProfilePage() {
 
             {!editing ? (
               <button className="edit-trigger" onClick={() => setEditing(true)}>
-                <span className="icon">✎</span> Edit Profile
+                ✎ Edit Profile
               </button>
             ) : (
               <div className="edit-actions">
-                <button className="cancel-btn" onClick={() => setEditing(false)}>
+                <button className="cancel-btn" onClick={() => setEditing(false)} disabled={loading}>
                   Cancel
                 </button>
                 <button className="save-btn" onClick={handleSave} disabled={loading}>
-                  {loading ? (
-                    <div className="spinner"></div>
-                  ) : (
-                    <>
-                      <span className="icon">✓</span> Save Changes
-                    </>
-                  )}
+                  {loading ? <span className="loader"></span> : "Save Changes"}
                 </button>
               </div>
             )}
           </div>
 
-          <div className="form-grid">
+          <form className="form-grid" onSubmit={(e) => e.preventDefault()}>
             <div className="form-group">
-              <label>Full Name</label>
+              <label htmlFor="name">Full Name</label>
               <input
+                id="name"
                 type="text"
-                name="name"
                 value={form.name}
                 disabled={!editing}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Enter your name"
               />
             </div>
+
             <div className="form-group">
               <label>Email Address</label>
               <input type="email" value={user.email} disabled className="disabled-input" />
+              <small className="input-hint">Email cannot be changed.</small>
             </div>
+
             <div className="form-group">
-              <label>Phone Number</label>
+              <label htmlFor="phone">Phone Number</label>
               <input
+                id="phone"
                 type="tel"
-                name="phone"
                 value={form.phone}
                 disabled={!editing}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="Not provided"
               />
             </div>
+
             <div className="form-group">
               <label>Member Since</label>
-              <input type="text" value={new Date(user.createdAt).toLocaleDateString()} disabled className="disabled-input" />
+              <div className="static-field">
+                {new Date(user.createdAt).toLocaleDateString('en-IN', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          </form>
+        </section>
 
-        {/* Security Quick Link */}
-        <div className="info-card security-card">
+        <section className="info-card security-card">
           <div className="security-info">
             <h3>Password & Security</h3>
-            <p>Keep your account safe by updating your password regularly.</p>
+            <p>Update your password or enable two-factor authentication.</p>
           </div>
           <button className="outline-btn" onClick={() => router.push("/account/security")}>
             Manage Security
           </button>
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -1,36 +1,32 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ReviewSection from "@/app/components/ReviewSection";
 import ProductSlider from "@/app/components/ProductSlider";
 import { useCart } from "@/app/context/CartContext";
+import Image from "next/image";
 
 export default function ProductClient({ initialProduct }) {
+  // Use initialProduct directly to avoid "Loading..." flicker
   const [product, setProduct] = useState(initialProduct);
   const { slug } = useParams();
   const [selectedVarIdx, setSelectedVarIdx] = useState(0);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedCapacity, setSelectedCapacity] = useState("");
+  const router = useRouter()
+
+  // Initialize strings based on the first variant for accurate stock checking
+  const [selectedColor, setSelectedColor] = useState(
+    initialProduct.variants[0]?.colorName || ""
+  );
+  const [selectedCapacity, setSelectedCapacity] = useState(
+    initialProduct.variants[0]?.capacity || ""
+  );
 
   const { addToCart, cartItems, setIsCartOpen } = useCart();
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/${slug}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProduct(data);
-        // ADD THESE LINES to initialize the strings used for stock checking
-        if (data.variants && data.variants.length > 0) {
-          setSelectedColor(data.variants[0].colorName);
-          setSelectedCapacity(data.variants[0].capacity);
-        }
-      });
-  }, [slug]);
-
-  // Auto-Play Logic
+  // Auto-Play Logic for Gallery
   useEffect(() => {
     if (!product) return;
     const currentImages = product.variants[selectedVarIdx]?.images || [];
@@ -47,6 +43,7 @@ export default function ProductClient({ initialProduct }) {
 
   const currentVariant = product.variants[selectedVarIdx];
   const activeImg = currentVariant.images[activeImgIdx];
+
   const discount = product.compareAtPrice
     ? Math.round(
         ((product.compareAtPrice - product.price) / product.compareAtPrice) *
@@ -56,6 +53,11 @@ export default function ProductClient({ initialProduct }) {
 
   const handleAddToBag = () => {
     addToCart(product, quantity, currentVariant.colorName, selectedCapacity);
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity, currentVariant.colorName, selectedCapacity);
+    router.push("/checkout");
   };
 
   const isInBag = cartItems.some(
@@ -100,9 +102,16 @@ export default function ProductClient({ initialProduct }) {
                 📤
               </button>
 
-              <img
+              {/* Next.js Image with 'fill' requires the parent to be 'position: relative'.
+          The 'hero-visual' class now handles the scaling via the CSS Fix 1 above.
+      */}
+              <Image
                 src={activeImg}
                 alt={product.title}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: "contain" }}
                 className="hero-visual fade-in"
                 key={activeImg}
               />
@@ -137,8 +146,18 @@ export default function ProductClient({ initialProduct }) {
                     i === activeImgIdx ? "active" : ""
                   }`}
                   onClick={() => setActiveImgIdx(i)}
+                  style={{
+                    position: "relative",
+                    width: "70px",
+                    height: "70px",
+                  }}
                 >
-                  <img src={img} alt="view" />
+                  <Image
+                    src={img}
+                    alt="view"
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
                 </div>
               ))}
             </div>
@@ -157,7 +176,6 @@ export default function ProductClient({ initialProduct }) {
                 ({product.reviewsCount} Verified Reviews)
               </span>
 
-              {/* IMPROVED STOCK INDICATOR */}
               <span
                 className={
                   variantStock <= 0
@@ -187,7 +205,6 @@ export default function ProductClient({ initialProduct }) {
           </header>
 
           {/* COLOR SELECTION */}
-          {/* COLOR SELECTION */}
           <div className="product-option-section">
             <p className="option-label">
               Color: <strong>{currentVariant.colorName}</strong>
@@ -202,7 +219,7 @@ export default function ProductClient({ initialProduct }) {
                   style={{ "--swatch-hex": v.colorCode }}
                   onClick={() => {
                     setSelectedVarIdx(i);
-                    setSelectedColor(v.colorName); // ADD THIS LINE
+                    setSelectedColor(v.colorName);
                     setActiveImgIdx(0);
                   }}
                 />
@@ -210,7 +227,7 @@ export default function ProductClient({ initialProduct }) {
             </div>
           </div>
 
-          {/* CAPACITY SELECTION - NEW DESIGN */}
+          {/* CAPACITY SELECTION */}
           <div className="product-option-section">
             <p className="option-label">
               Select Capacity: <strong>{selectedCapacity}</strong>
@@ -237,7 +254,7 @@ export default function ProductClient({ initialProduct }) {
                       {isOutOfStock
                         ? "Out of Stock"
                         : vStock <= 5
-                        ? `Only ${vStock} left` // Show the specific number
+                        ? `Only ${vStock} left`
                         : "Available"}
                     </span>
                   </button>
@@ -263,7 +280,6 @@ export default function ProductClient({ initialProduct }) {
               {isInBag ? "Add More to Bag" : "Add to Bag"}
             </button>
 
-            {/* NEW: Optional "Go to Bag" button that only shows if item is added */}
             {isInBag ? (
               <button
                 className="btn-buy-now view-bag-btn"
@@ -272,10 +288,17 @@ export default function ProductClient({ initialProduct }) {
                 View Bag
               </button>
             ) : (
-              <button className="btn-buy-now">Buy It Now</button>
+              <button
+                className="btn-buy-now"
+                onClick={handleBuyNow}
+                disabled={variantStock <= 0}
+              >
+                Buy It Now
+              </button>
             )}
           </div>
 
+          {/* TRUST INDICATORS */}
           <div className="trust-grid">
             <div className="trust-item">
               <span>🚚</span> Free Express Shipping
@@ -324,10 +347,9 @@ export default function ProductClient({ initialProduct }) {
       <ProductSlider
         title="Similar Styles"
         subtitle="More from our collection"
-        fetchUrl={`http://localhost:8080/api/recommend?type=similar&category=${product.category}&productId=${product._id}`}
+        fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/recommend?type=similar&category=${product.category}&productId=${product._id}`}
       />
 
-      {/* After the Tabs and Description */}
       <ReviewSection
         productId={product._id}
         productRating={product.rating}

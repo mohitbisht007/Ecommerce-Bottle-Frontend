@@ -1,63 +1,57 @@
-// src/app/page.js
 import CategoryBar from '../components/CategoryBar';
-import FeaturedProducts from '../components/FeaturedProducts';
-import ProductCard from '../components/ProductCard';
 import HeroCarousel from '../components/HeroCarousel';
 import CategoryTray from '../components/CategoryTray';
 import PriceRangeTray from '../components/PriceRangeTray';
 
+// 1. Metadata remains the same
 export const metadata = {
-  title: "Premium Water Bottles | Insulated Steel & Glass | Bottle Shop",
-  description: "Shop high-quality, eco-friendly insulated water bottles. Keep your drinks cold for 24 hours. Free shipping on orders over ₹500.",
-  keywords: ["steel bottles", "insulated water bottle", "gym bottles", "eco-friendly"]
+  title: "Premium Water Bottles | Insulated Steel & Glass | BouncyBucket",
+  description: "Shop high-quality, eco-friendly insulated water bottles. Keep your drinks cold for 24 hours.",
 };
 
-async function fetchHomeData() {
+async function getHomeData() {
   const base = process.env.NEXT_PUBLIC_API_URL;
   
-  try {
-    const [bannersRes, productsRes] = await Promise.all([
-      fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }), // Cache for 1 hour
-      fetch(`${base}/products?limit=8&sort=newest`, { cache: 'no-store' })
-    ]);
+  // Parallel fetch for speed
+  const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
+    fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }),
+    fetch(`${base}/categories`, { next: { revalidate: 3600 } }),
+    fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
+    fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })
+  ]);
 
-    if (!bannersRes.ok || !productsRes.ok) throw new Error("Failed to fetch data");
-
-    const banners = await bannersRes.json();
-    const productsJson = await productsRes.json();
-
-    return {
-      bannerImages: banners.length > 0 ? banners.map(b => b.imageUrl) : [],
-      newArrivals: productsJson.items || []
-    };
-  } catch (err) {
-    console.error("Home Data Error:", err);
-    return { bannerImages: [], newArrivals: [] }; // Fallback to empty
-  }
+  return {
+    banners: (await bannersRes.json()) || [],
+    categories: (await catsRes.json()).categories || [],
+    steelBottles: (await steelRes.json()).items || [],
+    newArrivals: (await newArrivalsRes.json()).items || [],
+  };
 }
 
 export default async function HomePage() {
-  const { bannerImages, newArrivals } = await fetchHomeData();
-
-  // Fallback images if none are uploaded in admin yet
-  const fallbackImages = [
-    'https://www.solara.in/cdn/shop/files/WhatsApp_Image_2025-11-05_at_5.46.28_PM.jpg?v=1762511484&width=1600'
-  ];
+  const data = await getHomeData();
 
   return (
-    <div style={{ padding: 20 }}>
-      {/* Now uses dynamic banners from your Admin Dashboard */}
-      <HeroCarousel 
-        images={bannerImages.length > 0 ? bannerImages : fallbackImages} 
-        interval={4500} 
-        height="500px" 
+    <main>
+      {/* 2. H1 is critical for SEO. Usually placed in the Hero */}
+      <HeroCarousel banners={data.banners} />
+
+      {/* 3. Passing pre-fetched products to avoid "loading skeletons" */}
+      <CategoryBar 
+        title="Bestselling Steel Bottles" 
+        products={data.steelBottles} 
+        query="category=steel" 
       />
 
-      <CategoryBar title="Bestselling Steel Bottles" query="category=Steel"/>
+      <CategoryBar 
+        title="New Arrivals" 
+        products={data.newArrivals} 
+        query="sort=newest" 
+      />
 
-      <CategoryBar title="New Arrivals" query="sort=new" />
       <PriceRangeTray />
-      <CategoryTray />
-    </div>
+
+      <CategoryTray categories={data.categories} />
+    </main>
   );
 }
