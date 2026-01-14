@@ -1,5 +1,7 @@
-import AuthPage from "@/app/components/AuthForm";
+export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
-  return <AuthPage isLogin={true} />;
+import LoginClient from "./LoginClient";
+
+export default function Page() {
+  return <LoginClient />;
 }
