@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function CheckoutPage() {
+  const [hasMounted, setHasMounted] = useState(false);
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } =
     useCart();
   const router = useRouter();
@@ -40,13 +41,18 @@ export default function CheckoutPage() {
     state: "",
   });
 
+  
+
   useEffect(() => {
+    setHasMounted(true);
     document.title = "Checkout | BouncyBucket";
     const token = localStorage.getItem("token");
     if (!token) {
       setShowEmailModal(true); // Open the identification popup
     }
   }, []);
+
+  if (!hasMounted) return null;
 
   const handleIdentify = async (e) => {
     e.preventDefault();
