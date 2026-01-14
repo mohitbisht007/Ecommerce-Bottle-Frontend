@@ -11,21 +11,36 @@ export const metadata = {
 
 async function getHomeData() {
   const base = process.env.NEXT_PUBLIC_API_URL;
-  
-  // Parallel fetch for speed
-  const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
-    fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }),
-    fetch(`${base}/categories`, { next: { revalidate: 3600 } }),
-    fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
-    fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })
-  ]);
+  const fallback = { banners: [], categories: [], steelBottles: [], newArrivals: [] };
 
-  return {
-    banners: (await bannersRes.json()) || [],
-    categories: (await catsRes.json()).categories || [],
-    steelBottles: (await steelRes.json()).items || [],
-    newArrivals: (await newArrivalsRes.json()).items || [],
-  };
+  if (!base) return fallback;
+
+  try {
+    const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
+      fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }),
+      fetch(`${base}/categories`, { next: { revalidate: 3600 } }),
+      fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
+      fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })
+    ]);
+
+    // Check every response for JSON content-type
+    const results = await Promise.all([bannersRes, catsRes, steelRes, newArrivalsRes].map(async (res) => {
+      if (res.ok && res.headers.get("content-type")?.includes("application/json")) {
+        return await res.json();
+      }
+      return null;
+    }));
+
+    return {
+      banners: results[0] || [],
+      categories: results[1]?.categories || [],
+      steelBottles: results[2]?.items || [],
+      newArrivals: results[3]?.items || [],
+    };
+  } catch (err) {
+    console.error("Home data fetch failed during build:", err.message);
+    return fallback;
+  }
 }
 
 export default async function HomePage() {

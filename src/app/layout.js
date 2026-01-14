@@ -11,7 +11,7 @@ export const metadata = {
     template: "%s | Bottle Shop" // Allows sub-pages to have titles like "Gallon Bottle | Bottle Shop"
   },
   description: "Discover our curated collection of luxury, eco-friendly, and high-performance water bottles.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://bouncybucket.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
