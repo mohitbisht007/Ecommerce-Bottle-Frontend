@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 "use client";
 
 import Link from "next/link";
@@ -46,7 +45,6 @@ export default function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState(null);
 
-  // UI states
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
@@ -57,7 +55,6 @@ export default function Header() {
   const userMenuRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // 1. Fetch Categories
   useEffect(() => {
     const fetchCats = async () => {
       try {
@@ -71,7 +68,6 @@ export default function Header() {
     fetchCats();
   }, []);
 
-  // 2. Load LocalStorage State
   useEffect(() => {
     const loadState = () => {
       try {
@@ -106,7 +102,6 @@ export default function Header() {
     };
   }, []);
 
-  // 3. Click Outside Listener
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -117,7 +112,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showUserMenu]);
 
-  // 4. Focus Search Input
   useEffect(() => {
     if (showSearch) {
       setTimeout(() => searchInputRef.current?.focus(), 100);
@@ -134,8 +128,6 @@ export default function Header() {
   const handleSearchSubmit = (e) => {
     e?.preventDefault?.();
     if (!searchQuery.trim()) return;
-    
-    // SEO & Speed: Use Next.js Router instead of window.location
     router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
     setShowSearch(false);
   };
@@ -155,14 +147,14 @@ export default function Header() {
       <header className={`site-header modern responsive-header ${showSearch ? "search-active" : ""}`}>
         <div className="site-inner">
           
-          {/* LEFT: Burger & Logo */}
+          {/* LEFT: Burger & Desktop Logo */}
           <div className="nav-left">
-            <button className="icon-btn burger-btn" aria-label="Open menu" onClick={toggleSidebar} aria-expanded={showSidebar}>
+            <button className="icon-btn burger-btn" aria-label="Open menu" onClick={toggleSidebar}>
               <IconBurger />
             </button>
 
             <Link href="/" className="logo desktop-logo" aria-label="BottleShop Home">
-              <svg width="34" height="34" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
                 <rect width="48" height="48" rx="12" fill="#ec4899" />
                 <path d="M14 26c4-6 10-6 14-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -170,49 +162,60 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* CENTER: Navigation or Search */}
+          {/* CENTER: Navigation, Search, or Mobile Logo */}
           <div className="center-area">
             {!showSearch ? (
-              <nav className="nav-center" aria-label="Main navigation">
-                <ul>
-                  <li>
-                    <Link 
-                      href="/shop?sort=newest" 
-                      className={`cat-pill ${activeCategory === "New Arrivals" ? "active" : ""}`}
-                      onClick={() => setActiveCategory("New Arrivals")}
-                    >
-                      New Arrivals
-                    </Link>
-                  </li>
-                  {categories.slice(0, 5).map((cat) => (
-                    <li key={cat._id}>
-                      <Link
-                        href={`/shop?category=${encodeURIComponent(cat.name)}`}
-                        className={`cat-pill ${activeCategory === cat.name ? "active" : ""}`}
-                        onClick={() => setActiveCategory(cat.name)}
+              <>
+                {/* Desktop Nav */}
+                <nav className="nav-center" aria-label="Main navigation">
+                  <ul>
+                    <li>
+                      <Link 
+                        href="/shop?sort=newest" 
+                        className={`cat-pill ${activeCategory === "New Arrivals" ? "active" : ""}`}
+                        onClick={() => setActiveCategory("New Arrivals")}
                       >
-                        {cat.displayName}
+                        New Arrivals
                       </Link>
                     </li>
-                  ))}
-                </ul>
-              </nav>
+                    {categories.slice(0, 5).map((cat) => (
+                      <li key={cat._id}>
+                        <Link
+                          href={`/shop?category=${encodeURIComponent(cat.name)}`}
+                          className={`cat-pill ${activeCategory === cat.name ? "active" : ""}`}
+                          onClick={() => setActiveCategory(cat.name)}
+                        >
+                          {cat.displayName}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+
+                {/* Mobile Center Logo */}
+                <Link href="/" className="logo mobile-logo" aria-label="BottleShop Home">
+                  <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="12" fill="#ec4899" />
+                    <path d="M14 26c4-6 10-6 14-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="logo-text">BottleShop</span>
+                </Link>
+              </>
             ) : (
               <form className="search-area" onSubmit={handleSearchSubmit} role="search">
                 <input
                   ref={searchInputRef}
                   className="search-input"
-                  placeholder="Search products, categories..."
+                  placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Search site"
                 />
-                <button type="button" className="search-close" onClick={closeSearch} aria-label="Close search">✕</button>
+                <button type="button" className="search-close" onClick={closeSearch}>✕</button>
               </form>
             )}
           </div>
 
-          {/* RIGHT: User, Wishlist, Cart */}
+          {/* RIGHT: User (Desktop Only), Wishlist, Cart */}
           <div className="nav-right">
             {!showSearch && (
               <button className="icon-btn" aria-label="Open Search" onClick={openSearch}>
@@ -224,42 +227,44 @@ export default function Header() {
               <IconHeart />
             </Link>
 
-            {!user ? (
-              <Link href="/login" className="icon-btn" aria-label="Login">
-                <IconUser />
-              </Link>
-            ) : (
-              <div className="user-menu-container" ref={userMenuRef}>
-                <button 
-                  className={`user-nav-pill ${showUserMenu ? "active" : ""}`} 
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  aria-label="User menu"
-                >
-                  <div className="user-avatar-sm">{user.name?.charAt(0)}</div>
-                  <span className="user-firstname">{user.name?.split(" ")[0]}</span>
-                  <span className={`chevron ${showUserMenu ? "up" : ""}`}>▾</span>
-                </button>
+            {/* User Profile - Hidden on Mobile via CSS */}
+            <div className="user-profile-desktop">
+              {!user ? (
+                <Link href="/login" className="icon-btn" aria-label="Login">
+                  <IconUser />
+                </Link>
+              ) : (
+                <div className="user-menu-container" ref={userMenuRef}>
+                  <button 
+                    className={`user-nav-pill ${showUserMenu ? "active" : ""}`} 
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    <div className="user-avatar-sm">{user.name?.charAt(0)}</div>
+                    <span className="user-firstname">{user.name?.split(" ")[0]}</span>
+                    <span className={`chevron ${showUserMenu ? "up" : ""}`}>▾</span>
+                  </button>
 
-                {showUserMenu && (
-                  <div className="user-dropdown-modern">
-                    <div className="dropdown-header">
-                      <p className="drop-name">{user.name}</p>
-                      <p className="drop-email">{user.email}</p>
+                  {showUserMenu && (
+                    <div className="user-dropdown-modern">
+                      <div className="dropdown-header">
+                        <p className="drop-name">{user.name}</p>
+                        <p className="drop-email">{user.email}</p>
+                      </div>
+                      <div className="dropdown-links">
+                        <Link href="/account" onClick={() => setShowUserMenu(false)} className="drop-item">👤 Profile</Link>
+                        <Link href="/account/orders" onClick={() => setShowUserMenu(false)} className="drop-item">📦 Orders</Link>
+                        <Link href="/account/addresses" onClick={() => setShowUserMenu(false)} className="drop-item">📍 Addresses</Link>
+                      </div>
+                      <div className="dropdown-footer">
+                        <button onClick={handleLogout} className="drop-logout-btn">Logout</button>
+                      </div>
                     </div>
-                    <div className="dropdown-links">
-                      <Link href="/account" onClick={() => setShowUserMenu(false)} className="drop-item">👤 Profile</Link>
-                      <Link href="/account/orders" onClick={() => setShowUserMenu(false)} className="drop-item">📦 Orders</Link>
-                      <Link href="/account/addresses" onClick={() => setShowUserMenu(false)} className="drop-item">📍 Addresses</Link>
-                    </div>
-                    <div className="dropdown-footer">
-                      <button onClick={handleLogout} className="drop-logout-btn">Logout</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
+            </div>
 
-            <Link href="/checkout" className="icon-btn cart" aria-label={`Cart with ${cartCount} items`}>
+            <Link href="/checkout" className="icon-btn cart" aria-label="Cart">
               <IconCart />
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </Link>
@@ -267,13 +272,12 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Slide-in sidebar (mobile) */}
+      {/* Sidebar (Unchanged - User exists here) */}
       <div className={`sidebar-backdrop ${showSidebar ? "open" : ""}`} onClick={closeSidebar}></div>
-
-      <aside className={`side-drawer ${showSidebar ? "open" : ""}`} aria-label="Mobile menu">
+      <aside className={`side-drawer ${showSidebar ? "open" : ""}`}>
         <div className="side-inner">
           <div className="side-top">
-            <button className="close-drawer" onClick={closeSidebar} aria-label="Close menu">✕</button>
+            <button className="close-drawer" onClick={closeSidebar}>✕</button>
             <span className="side-title">Menu</span>
           </div>
 
@@ -314,15 +318,6 @@ export default function Header() {
               </Link>
             ))}
           </nav>
-
-          <div className="side-social">
-            <div className="side-social-label">Follow us</div>
-            <div className="side-social-list">
-              <a href="#" className="social" aria-label="Instagram">IG</a>
-              <a href="#" className="social" aria-label="Facebook">FB</a>
-              <a href="#" className="social" aria-label="X / Twitter">X</a>
-            </div>
-          </div>
         </div>
       </aside>
     </>

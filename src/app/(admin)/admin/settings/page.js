@@ -193,7 +193,6 @@ function BannerManager() {
         },
         body: JSON.stringify({
           title: formData.get("title"),
-          subtitle: formData.get("subtitle"),
           link: formData.get("link"),
           order: Number(formData.get("order")),
           imageUrl: secure_url,
@@ -241,10 +240,6 @@ function BannerManager() {
               <div className="form-group">
                 <label>Banner Title</label>
                 <input name="title" placeholder="e.g. Summer Collection" />
-              </div>
-              <div className="form-group">
-                <label>Subtitle</label>
-                <input name="subtitle" placeholder="e.g. Up to 40% Off" />
               </div>
               <div className="form-group">
                 <label>Target Link</label>

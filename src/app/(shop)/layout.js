@@ -1,4 +1,5 @@
 import AnnouncementBar from "../components/AnnouncementBar";
+import Breadcrumbs from "../components/Breadcrumbs";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import "../globals.css"
@@ -23,6 +24,7 @@ export default async function ShopLayout({ children }) {
     <>
       <AnnouncementBar />
       <Header initialCategories={categories} />
+      <Breadcrumbs />
       <main style={{ minHeight: '80vh' }}>
         {children}
       </main>

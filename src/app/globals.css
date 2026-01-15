@@ -73,15 +73,95 @@
 .side-social-label{font-size:13px;color:#6b7280;margin-bottom:8px}
 .side-social-list{display:flex;gap:8px}
 .side-social-list .social{display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:8px;background:#111;color:#fff;text-decoration:none}
+
+.desktop-logo { display: flex !important; }
+.mobile-logo { display: none !important; }
+.user-profile-desktop { display: block; }
+
+/* --- Mobile View Overrides (880px and below) --- */
 @media (max-width: 880px) {
+  
+
+  /* 3. Icons grouped on the right */
+ 
+
+  /* 4. Remove Profile Pill/Menu from Header on mobile */
+  
+
+  /* Ensure search doesn't break centered logo when active */
+  
+  
+
+  
+}
+
+@media (max-width: 880px) {
+  .site-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* 1. Hamburger remains on the left */
+  .nav-left {
+    flex: 0 0 auto;
+  }
+  .desktop-logo { display: none !important; }
+
+  /* 2. Logo moves to absolute center */
+ 
+  
+  .mobile-logo {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    pointer-events: auto; /* Re-enable clicks for logo */
+  }
+  
+  .logo-text {
+    font-size: 16px;
+    font-weight: 800;
+  }
 .icon-btn.burger-btn{display:flex}
 .desktop-logo{display:none}
 .mobile-logo{display:flex}
+ .nav-right {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 4px; /* Tighter gap for mobile */
+  }
 .nav-left{display:flex;align-items:center;gap:8px}
-.center-area{justify-content:center}
+.center-area {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* Allows clicks through the area if needed */
+  }
 .nav-center{display:none!important}
 .search-area{width:100%;padding:0 12px}
 .site-inner{padding:8px 12px}
+.user-profile-desktop {
+    display: none !important;
+  }
+.site-header.search-active .center-area {
+    position: static;
+    transform: none;
+    flex: 1;
+    pointer-events: auto;
+  }
+.site-header.search-active .mobile-logo {
+    display: none !important;
+  }
+.icon-btn {
+    width: 38px;
+    height: 38px;
+    border: none; /* Cleaner look on mobile */
+    background: transparent;
+  }
 .icon-btn.cart{padding-right:10px}
 .site-header.search-active .nav-right{display:none}
 .nav-right{gap:8px}
@@ -94,6 +174,9 @@
 .icon-btn:focus,.cat-pill:focus,.side-cat:focus,.burger-btn:focus{outline:3px solid #3b82f624;outline-offset:2px}
 @media (max-width: 480px) {
 .cart-badge{top:-6px;right:-4px;min-width:18px;height:18px;font-size:11px}
+.logo-text {
+    display: none; /* Show only icon if space is too tight */
+  }
 }
 
 /* /-------------------------------------------------------------------------------------------------------------/ */
@@ -133,70 +216,11 @@
   z-index: 0;
 }
 
-/* Your gradient overlay from previous style */
-.hero-overlay-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.2));
-  z-index: 1;
-}
-
-/* Text and Button styling preserved from your previous code */
-.hero-content-container {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-}
-
-.hero-text-box {
-  max-width: 600px;
-  padding: 0 5%;
-  animation: fadeInUp .8s ease-out;
-  color: #fff;
-}
-
-.hero-subtitle {
-  display: block;
-  font-size: clamp(14px, 2vw, 18px);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 10px;
-  color: #fbbf24;
-}
-
-.hero-title {
-  font-size: clamp(32px, 5vw, 64px);
-  line-height: 1.1;
-  font-weight: 800;
-  margin-bottom: 25px;
-}
-
-.hero-cta-btn {
-  display: inline-block;
-  padding: 15px 40px;
-  background-color: #ec4899;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  border-radius: 50px;
-  transition: all .3s ease;
-  border: 2px solid transparent;
-}
-
-.hero-cta-btn:hover {
-  background-color: transparent;
-  border-color: #fff;
-  transform: translateY(-3px);
-}
 
 /* Mobile Adjustments preserved */
 @media (max-width: 768px) {
   .hero-section, .hero-slide-wrapper {
     height: 70vh;
-  }
-  .hero-text-box {
-    text-align: center;
-    max-width: 100%;
   }
   .swiper-button-next, .swiper-button-prev {
     display: none;
@@ -215,6 +239,74 @@
 .hero-skeleton {
   background: #e2e8f0;
   animate: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Swiper Button */
+.mySwiper .swiper-button-next::after,
+.mySwiper .swiper-button-prev::after {
+  display: none;
+}
+
+/* 2. Style the custom arrow containers */
+.mySwiper .swiper-button-next,
+.mySwiper .swiper-button-prev {
+  color: #1f2937;
+  width: 40px;
+  height: 40px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0; /* Hidden by default */
+}
+
+/* 3. Modern positioning: slide in from edge on hover */
+.hero-section:hover .swiper-button-next {
+  opacity: 1;
+  right: 30px;
+}
+
+.hero-section:hover .swiper-button-prev {
+  opacity: 1;
+  left: 30px;
+}
+
+/* 4. The SVG Arrow Icons */
+.nav-icon {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.5; /* Thin lines look more premium */
+  transition: transform 0.3s ease;
+}
+
+.swiper-button-next:hover .nav-icon {
+  transform: translateX(5px);
+  color: #ec4899; /* Your pink brand color */
+}
+
+.swiper-button-prev:hover .nav-icon {
+  transform: translateX(-5px);
+  color: #ec4899;
+}
+
+/* 5. Mobile Adjustments - Smaller but functional */
+@media (max-width: 768px) {
+  .mySwiper .swiper-button-next,
+  .mySwiper .swiper-button-prev {
+    display: none; /* Best for mobile: let them swipe with fingers */
+  }
+}
+
+/* Elegant Pagination Dots */
+.swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: #cbd5e1;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+  width: 24px; /* Stretching dot is very modern */
+  border-radius: 4px;
+  background: #ec4899 !important;
 }
 
 /* -------------------------------------------------------------------------------------------------------- */
@@ -1766,8 +1858,82 @@ to{transform:rotate(360deg)}
 
 
 /* -------------------------------------------------------------------------------------------------------- */
+/* BreadCrumbs */
 
+/* --- Modern Breadcrumb Container --- */
+.breadcrumb-container {
+  background-color: #f9fafb; /* Extremely light gray background */
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 1rem;
+}
 
+.breadcrumb-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 20px; /* Increased padding for a breathable feel */
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap; /* Keep it on one line */
+  overflow-x: auto; /* Scrollable on mobile */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
 
+.breadcrumb-inner::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+/* --- Individual Items --- */
+.bc-item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.bc-link {
+  text-decoration: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bc-link:hover {
+  background-color: #fff;
+  color: #ec4899; /* Your brand pink */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+/* --- Stylish Separator --- */
+.bc-separator {
+  margin: 0 4px;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+}
+
+.bc-separator svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+}
+
+/* --- Current Page State --- */
+.bc-current {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 4px 8px;
+  cursor: default;
+}
+
+/* Mobile Tweak */
+@media (max-width: 768px) {
+  .breadcrumb-inner {
+    padding: 12px 16px;
+  }
+}
 
 /* -------------------------------------------------------------------------------------------------------- */

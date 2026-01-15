@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
         {discount > 0 && <span className="discount-pill">-{discount}% OFF</span>}
         
         {/* Main Product Link */}
-        <Link href={`/product/${product.slug}`} className="image-click-area">
+        <Link href={`/shop/${product.slug}`} className="image-click-area">
           <img 
             src={displayImages[activeImgIdx]} 
             alt={product.title} 
@@ -65,7 +65,7 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-        <Link href={`/product/${product.slug}`}>
+        <Link href={`/shop/${product.slug}`}>
           <h3 className="title">{product.title}</h3>
         </Link>
 
