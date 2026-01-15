@@ -718,6 +718,26 @@
 /* Product card */
 .luxury-card{--card-radius:16px;--accent:#ec4899;background:#fff;border-radius:var(--card-radius);transition:all .4s cubic-bezier(0.165,0.84,0.44,1);position:relative;display:flex;flex-direction:column}
 .card-top{position:relative;aspect-ratio:1/1.2;margin:8px;border-radius:12px;background-color:#f7f7f7;overflow:hidden}
+.wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  z-index: 10;
+  background: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+  color: #1a1a1a;
+}
+.wishlist-btn:hover { transform: scale(1.1); }
+.wishlist-btn.active { color: var(--accent); }
 .main-asset{width:100%;height:100%;object-fit:contain;padding:20px;transition:transform .6s ease}
 .luxury-card:hover .main-asset{transform:scale(1.1)}
 .discount-pill{position:absolute;top:12px;left:12px;background:#000;color:#fff;padding:5px 12px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:.5px;z-index:5}
@@ -738,10 +758,41 @@
 .price-main{font-size:20px;font-weight:800;color:#000}
 .price-strike{font-size:14px;color:#bbb;text-decoration:line-through}
 @media (max-width: 768px) {
-.luxury-card{border-radius:0;border:1px solid #eee}
-.image-nav{display:none}
-.quick-add-btn{display:none}
-.main-asset{padding:10px}
+  .luxury-card {
+    margin: 0;
+    border: none; /* Cleaner look for grids */
+  }
+
+  .card-top {
+    margin: 0; /* Remove margin so images look larger in the grid */
+    border-radius: 0; /* Full bleed image look */
+    aspect-ratio: 1 / 1.3; /* Taller for better mobile impact */
+  }
+
+  .main-asset {
+    padding: 0px !important; /* REMOVE PADDING TO MAKE IMAGE BIGGER */
+    object-fit: cover; /* Optional: Use cover if you want the background to fill, 
+                          but 'contain' is safer for bottles. 
+                          If using 'contain', set padding to 0 or 5px. */
+  }
+
+  /* Adjust Text for Mobile */
+  .card-bottom {
+    padding: 12px 8px;
+  }
+
+  .title {
+    font-size: 14px;
+    height: 40px; /* Fixed height for alignment */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .price-main {
+    font-size: 16px;
+  }
 }
 
 /* -------------------------------------------------------------------------------------------------------- */
@@ -995,11 +1046,71 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 
 /* Category Bar */
 
-.category-row-section{padding:60px 0;background:#fff}
-.row-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:30px;padding:0 20px}
-.row-header h2{font-size:28px;font-weight:700;color:#1e293b}
-.view-all{color:#ec4899;text-decoration:none;font-weight:600;transition:.2s}
-.view-all:hover{text-decoration:underline;transform:translateX(5px)}
+.category-row-section{padding: 50px 0 30px 0;background:#fff}
+.category-row-header {
+  display: flex;
+  align-items: flex-end; /* Aligns the link to the bottom of the text */
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding: 0 10px;
+  border-bottom: 1px solid #f1f5f9; /* Subtle divider */
+  padding-bottom: 15px;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-pre-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #ec4899; /* Your brand pink */
+}
+
+.header-main-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* --- Interactive View All Link --- */
+.modern-view-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.link-arrow {
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.modern-view-all:hover {
+  color: #ec4899;
+}
+
+.modern-view-all:hover .link-arrow {
+  transform: translateX(6px); /* Arrow slides right on hover */
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .header-main-title { font-size: 22px; }
+  .header-pre-title { font-size: 10px; }
+  .modern-view-all .link-text { display: none; } /* Hide text on mobile, keep arrow */
+}
 .products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:0 20px}
 @media (max-width: 1024px) {
 .products-grid{grid-template-columns:repeat(3,1fr)}
@@ -2280,3 +2391,95 @@ to{transform:rotate(360deg)}
 }
 
 /* -------------------------------------------------------------------------------------------------------- */
+
+/* Comparison Section */
+
+.personalize-hero-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px;
+  text-align: center;
+}
+
+/* --- Header Styles --- */
+.personalize-header { margin-bottom: 40px; }
+.brand-tag { font-size: 12px; color: #ec4899; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+.main-heading { font-size: 42px; font-weight: 900; color: #1e293b; margin-top: 8px; }
+
+/* --- Slider Container --- */
+.comparison-container-v2 {
+  position: relative;
+  width: 100%;
+  height: 500px; /* Adjust height for the bottle image aspect ratio */
+  background: #f8fafc;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+  margin-bottom: 40px;
+}
+
+.comparison-slider { position: absolute; inset: 0; }
+
+.image-base, .image-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: contain; /* 'contain' ensures the whole bottle is visible */
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* --- Interaction Logic --- */
+.slider-input-v2 {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.slider-divider {
+  position: absolute;
+  top: 0; bottom: 0; width: 3px;
+  background: #ec4899; z-index: 5; pointer-events: none;
+}
+
+.slider-handle {
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 50px; height: 50px; background: #ec4899;
+  border: 4px solid #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+}
+
+/* --- Footer & Button --- */
+.personalize-footer { max-width: 600px; margin: 0 auto; }
+.sub-content { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 25px; }
+
+.premium-view-btn {
+  display: inline-block;
+  background: #1e293b;
+  color: #fff;
+  padding: 18px 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(30, 41, 59, 0.1);
+}
+
+.premium-view-btn:hover {
+  background: #ec4899;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .main-heading { font-size: 32px; }
+  .comparison-container-v2 { height: 250px; }
+  .personalize-hero-section { padding: 40px 15px; }
+}

@@ -2,6 +2,7 @@ import CategoryBar from '../components/CategoryBar';
 import HeroCarousel from '../components/HeroCarousel';
 import CategoryTray from '../components/CategoryTray';
 import PriceRangeTray from '../components/PriceRangeTray';
+import ComparisonBanner from './components/ComparisonBanner';
 
 // 1. Metadata remains the same
 export const metadata = {
@@ -57,6 +58,8 @@ export default async function HomePage() {
         products={data.steelBottles} 
         query="category=steel" 
       />
+
+      <ComparisonBanner />
 
       <CategoryBar 
         title="New Arrivals" 
