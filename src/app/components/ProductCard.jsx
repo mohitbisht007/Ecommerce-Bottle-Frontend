@@ -3,25 +3,37 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+import { useWishlist } from "../context/WishlistContext";
+
 const IconHeart = ({ filled }) => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={filled ? "#ec4899" : "none"}
-    stroke={filled ? "#ec4899" : "currentColor"}
+    fill={filled ? "currentColor" : "none"}
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    className="heart-icon-svg"
+    style={{ overflow: 'visible' }} // Extra safety to prevent clipping
   >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
   </svg>
 );
 
 export default function ProductCard({ product }) {
   const [selectedVarIdx, setSelectedVarIdx] = useState(0);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { toggleWishlist, isItemWishlisted, wishlistIds } = useWishlist()
+
+  const active = isItemWishlisted(product._id);
+  
+  const handleWishlistClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product._id);
+  };
 
   const currentVariant = product.variants[selectedVarIdx];
   const displayImages =
@@ -31,9 +43,9 @@ export default function ProductCard({ product }) {
 
   const discount = product.compareAtPrice
     ? Math.round(
-        ((product.compareAtPrice - product.price) / product.compareAtPrice) *
-          100
-      )
+      ((product.compareAtPrice - product.price) / product.compareAtPrice) *
+      100
+    )
     : 0;
 
   return (
@@ -46,14 +58,11 @@ export default function ProductCard({ product }) {
 
         {/* Wishlist Button */}
         <button
-          className={`wishlist-btn ${isWishlisted ? "active" : ""}`}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsWishlisted(!isWishlisted);
-          }}
-          aria-label="Add to wishlist"
+          className={`wishlist-btn ${active ? "active" : ""}`}
+          onClick={handleWishlistClick}
+          aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <IconHeart filled={isWishlisted} />
+          <IconHeart filled={active} />
         </button>
 
         {/* Main Product Link */}
@@ -92,9 +101,8 @@ export default function ProductCard({ product }) {
             {product.variants.map((v, i) => (
               <span
                 key={i}
-                className={`color-ring ${
-                  i === selectedVarIdx ? "selected" : ""
-                }`}
+                className={`color-ring ${i === selectedVarIdx ? "selected" : ""
+                  }`}
                 style={{ "--swatch-color": v.colorCode }}
                 onClick={() => {
                   setSelectedVarIdx(i);

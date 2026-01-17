@@ -19,7 +19,7 @@ async function getHomeData() {
   try {
     const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
       fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }),
-      fetch(`${base}/categories`, { next: { revalidate: 3600 } }),
+      fetch(`${base}/categories`, { cache: 'no-store' }),
       fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
       fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })
     ]);
@@ -51,6 +51,7 @@ export default async function HomePage() {
     <main>
       {/* 2. H1 is critical for SEO. Usually placed in the Hero */}
       <HeroCarousel banners={data.banners} />
+      <CategoryTray categories={data.categories} />
 
       {/* 3. Passing pre-fetched products to avoid "loading skeletons" */}
       <CategoryBar 
@@ -68,8 +69,6 @@ export default async function HomePage() {
       />
 
       <PriceRangeTray />
-
-      <CategoryTray categories={data.categories} />
     </main>
   );
 }

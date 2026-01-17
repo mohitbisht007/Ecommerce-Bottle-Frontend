@@ -2,6 +2,7 @@ import "./globals.css"
 import { CartProvider } from "./context/CartContext";
 import CartSidebar from "./components/CartSidebar";
 import { Inter } from 'next/font/google' // Optimized Google Font
+import { WishlistProvider } from "./context/WishlistContext";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,8 +32,10 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <CartProvider>
+          <WishlistProvider>
           <CartSidebar />
           {children}
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

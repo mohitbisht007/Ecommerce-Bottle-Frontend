@@ -2,49 +2,36 @@
 import Link from "next/link";
 import Image from "next/image"; // 2. IMPORT Next.js Image
 
-export default function CategoryTray({ categories }) {
-  // We no longer need fetch logic here; it comes from the parent page.js
+export default function CategoryCircleTray({ categories }) {
   if (!categories || categories.length === 0) return null;
 
+  console.log(categories)
+
   return (
-    <section className="premium-tray-section" aria-labelledby="tray-title">
-      <div className="tray-header">
-        <div className="title-group">
-          <span className="tray-tag">COLLECTIONS 2026</span>
-          <h2 id="tray-title" className="tray-title">Shop by Category</h2>
-        </div>
-        <Link href="/shop" className="tray-view-all" aria-label="View all product categories">
-          View All
-          <span className="arrow-icon" aria-hidden="true">→</span>
-        </Link>
+    <section className="category-circle-section">
+      <div className="lifestyle-header">
+        <span className="range-tag">Our Range</span>
+        <h2 className="lifestyle-title">Designed for Every Lifestyle</h2>
+        <p className="lifestyle-subtext">From daily hydration to adventure-grade bottles.</p>
       </div>
 
-      <div className="fancy-scroll-container">
+      <div className="circle-scroll-container">
         {categories.map((cat) => (
           <Link 
             href={`/shop?category=${encodeURIComponent(cat.name)}`} 
             key={cat._id} 
-            className="premium-card"
-            aria-label={`Explore ${cat.displayName} collection`}
+            className="circle-cat-item"
           >
-            <div className="card-outer">
-              <div className="glass-morph-bg"></div>
-              <div className="image-wrapper" style={{ position: 'relative', height: '200px', width: '100%' }}>
-                {/* 3. OPTIMIZED IMAGE */}
-                <Image 
-                  src={cat.image} 
-                  alt={`${cat.displayName} category`} 
-                  fill
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                  style={{ objectFit: 'cover' }}
-                  loading="lazy" 
-                />
-              </div>
-              <div className="card-badge">Explore</div>
+            <div className="circle-wrapper">
+              <Image 
+                src={cat.image} 
+                alt={cat.displayName} 
+                fill
+                className="circle-img"
+                sizes="120px"
+              />
             </div>
-            <div className="card-details">
-              <h3>{cat.displayName}</h3>
-            </div>
+            <span className="circle-title">{cat.displayName}</span>
           </Link>
         ))}
       </div>
