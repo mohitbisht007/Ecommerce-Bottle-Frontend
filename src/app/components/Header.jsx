@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 // --- Custom Icons ---
 const IconHeart = () => (
@@ -77,21 +78,6 @@ const IconBurger = () => (
   >
     <path d="M4 6h16M4 12h16M4 18h16" />
   </svg>
-);
-
-const Logo = () => (
-  <div className="logo-wrap">
-    <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#ec4899" />
-      <path
-        d="M14 26c4-6 10-6 14-2"
-        stroke="#fff"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
-    <span className="logo-text">BottleShop</span>
-  </div>
 );
 
 export default function Header() {
@@ -176,7 +162,14 @@ export default function Header() {
         <div className="header-container">
           <div className="header-left">
             <Link href="/" className="desktop-logo hide-mobile">
-              <Logo />
+              <Image
+                src="/logo2.png" // Path from your public folder
+                alt="Bouncy Bucket Logo"
+                width={300} // Adjust based on your design
+                height={120} // Adjust based on your design
+                priority // CRITICAL: Tells Next.js to load this first!
+                className="header-logo"
+              />
             </Link>
             <button
               className="icon-btn burger-trigger show-mobile"
@@ -202,7 +195,14 @@ export default function Header() {
               ))}
             </nav>
             <Link href="/" className="mobile-logo show-mobile">
-              <Logo />
+              <Image
+                src="/logo2.png" // Path from your public folder
+                alt="Bouncy Bucket Logo"
+                width={200} // Adjust based on your design
+                height={40} // Adjust based on your design
+                priority // CRITICAL: Tells Next.js to load this first!
+                className="header-logo"
+              />
             </Link>
           </div>
 

@@ -18,7 +18,7 @@ async function getHomeData() {
 
   try {
     const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
-      fetch(`${base}/storefront/banners`, { next: { revalidate: 3600 } }),
+      fetch(`${base}/storefront/banners`, { cache: 'no-store' }),
       fetch(`${base}/categories`, { cache: 'no-store' }),
       fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
       fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })

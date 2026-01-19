@@ -16,7 +16,9 @@ export default function StorefrontPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/settings`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/storefront/settings`
+        );
         const data = await res.json();
         if (data && data.announcement) {
           setAnnouncement(data.announcement);
@@ -32,14 +34,17 @@ export default function StorefrontPage() {
   const handleAnnouncementSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/settings`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `JWT ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ announcement }), // Wrapping it in the key expected by Schema
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/storefront/settings`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `JWT ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ announcement }), // Wrapping it in the key expected by Schema
+        }
+      );
 
       if (res.ok) {
         alert("Announcement settings saved successfully!");
@@ -62,9 +67,24 @@ export default function StorefrontPage() {
       </div>
 
       <div className="storefront-tabs">
-        <button className={activeTab === "banners" ? "active" : ""} onClick={() => setActiveTab("banners")}>Hero Banners</button>
-        <button className={activeTab === "announcement" ? "active" : ""} onClick={() => setActiveTab("announcement")}>Announcement Bar</button>
-        <button className={activeTab === "categories" ? "active" : ""} onClick={() => setActiveTab("categories")}>Categories</button>
+        <button
+          className={activeTab === "banners" ? "active" : ""}
+          onClick={() => setActiveTab("banners")}
+        >
+          Hero Banners
+        </button>
+        <button
+          className={activeTab === "announcement" ? "active" : ""}
+          onClick={() => setActiveTab("announcement")}
+        >
+          Announcement Bar
+        </button>
+        <button
+          className={activeTab === "categories" ? "active" : ""}
+          onClick={() => setActiveTab("categories")}
+        >
+          Categories
+        </button>
       </div>
 
       <div className="storefront-content">
@@ -73,43 +93,69 @@ export default function StorefrontPage() {
         {activeTab === "announcement" && (
           <div className="editor-card">
             <h3>Announcement Settings</h3>
-            
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                    <input 
-                        type="checkbox" 
-                        checked={announcement.enabled} 
-                        onChange={(e) => setAnnouncement({...announcement, enabled: e.target.checked})} 
-                    />
-                    Enable Announcement Bar
-                </label>
+
+            <div className="form-group" style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={announcement.enabled}
+                  onChange={(e) =>
+                    setAnnouncement({
+                      ...announcement,
+                      enabled: e.target.checked,
+                    })
+                  }
+                />
+                Enable Announcement Bar
+              </label>
             </div>
 
             <div className="form-group">
               <label>Message Text</label>
-              <input 
-                type="text" 
-                value={announcement.text} 
-                onChange={(e) => setAnnouncement({...announcement, text: e.target.value})} 
+              <input
+                type="text"
+                value={announcement.text}
+                onChange={(e) =>
+                  setAnnouncement({ ...announcement, text: e.target.value })
+                }
                 placeholder="e.g. Sale ends tonight!"
               />
             </div>
 
             <div className="form-group">
               <label>Background Color</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <input 
-                    type="color" 
-                    value={announcement.bgColor} 
-                    onChange={(e) => setAnnouncement({...announcement, bgColor: e.target.value})} 
-                    style={{ width: '50px', height: '40px', padding: '0', border: 'none' }}
+              <div
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
+              >
+                <input
+                  type="color"
+                  value={announcement.bgColor}
+                  onChange={(e) =>
+                    setAnnouncement({
+                      ...announcement,
+                      bgColor: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "50px",
+                    height: "40px",
+                    padding: "0",
+                    border: "none",
+                  }}
                 />
                 <span>{announcement.bgColor}</span>
               </div>
             </div>
 
-            <button 
-              className="admin-save-btn" 
+            <button
+              className="admin-save-btn"
               onClick={handleAnnouncementSave}
               disabled={loading}
             >
@@ -130,10 +176,11 @@ function BannerManager() {
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-
   // 1. Fetch Banners on load
   const fetchBanners = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`);
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`
+    );
     const data = await res.json();
     setBanners(data);
   };
@@ -142,16 +189,19 @@ function BannerManager() {
     if (!confirm("Are you sure you want to delete this banner?")) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `JWT ${localStorage.getItem("token")}`
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/storefront/banners/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `JWT ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (res.ok) {
-        setBanners(banners.filter(b => b._id !== id));
-        fetchBanners(); 
+        setBanners(banners.filter((b) => b._id !== id));
+        fetchBanners();
       } else {
         alert("Failed to delete banner.");
       }
@@ -161,47 +211,66 @@ function BannerManager() {
     }
   };
 
-  useEffect(() => { fetchBanners(); }, []);
+  useEffect(() => {
+    fetchBanners();
+  }, []);
 
   // 2. Submit Logic (Cloudinary + Backend)
   const handleBannerSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
-    
+
     const formData = new FormData(e.target);
-    const file = formData.get("image");
+    const pcFile = formData.get("pcImage");
+    const mobileFile = formData.get("mobileImage");
 
     try {
-      // Step A: Upload to Cloudinary
-      const cloudData = new FormData();
-      cloudData.append("file", file);
-      cloudData.append("upload_preset", "Product Images"); // Use your preset name
-      cloudData.append("cloud_name", "da1m7gtvf");
+      // Helper function for Cloudinary upload
+      const uploadToCloudinary = async (file) => {
+        const cloudData = new FormData();
+        cloudData.append("file", file);
+        cloudData.append("upload_preset", "Product Images");
+        cloudData.append("cloud_name", "da1m7gtvf");
 
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: cloudData,
-      });
-      const { secure_url } = await cloudRes.json();
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/da1m7gtvf/image/upload`,
+          {
+            method: "POST",
+            body: cloudData,
+          }
+        );
+        const data = await res.json();
+        return data.secure_url;
+      };
+
+      // Step A: Upload both images in parallel for speed
+      const [pcUrl, mobileUrl] = await Promise.all([
+        uploadToCloudinary(pcFile),
+        uploadToCloudinary(mobileFile),
+      ]);
 
       // Step B: Save to MongoDB
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `JWT ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({
-          title: formData.get("title"),
-          link: formData.get("link"),
-          order: Number(formData.get("order")),
-          imageUrl: secure_url,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/storefront/banners`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `JWT ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            title: formData.get("title"),
+            link: formData.get("link"),
+            order: Number(formData.get("order")),
+            imageUrl: pcUrl,
+            mobileImageUrl: mobileUrl, // Sending the new field
+          }),
+        }
+      );
 
       if (res.ok) {
         setShowModal(false);
-        fetchBanners(); // Refresh list
+        fetchBanners();
       }
     } catch (err) {
       console.error(err);
@@ -218,10 +287,19 @@ function BannerManager() {
             <img src={b.imageUrl} alt="" className="banner-preview-img" />
             <div className="banner-info">
               <h4>{b.title}</h4>
-              <p>Link: {b.link} | Order: {b.order}</p>
+              <p>
+                Link: {b.link} | Order: {b.order}
+              </p>
             </div>
             <div className="banner-actions">
-               <button className="delete-icon" onClick={() => {deleteBanner(b._id)}}>🗑️</button>
+              <button
+                className="delete-icon"
+                onClick={() => {
+                  deleteBanner(b._id);
+                }}
+              >
+                🗑️
+              </button>
             </div>
           </div>
         ))}
@@ -243,21 +321,31 @@ function BannerManager() {
               </div>
               <div className="form-group">
                 <label>Target Link</label>
-                <input name="link" required placeholder="e.g. /category/steel" />
+                <input
+                  name="link"
+                  required
+                  placeholder="e.g. /category/steel"
+                />
               </div>
               <div className="form-row">
-                 <div className="form-group">
-                   <label>Display Order</label>
-                   <input name="order" type="number" defaultValue="0" />
-                 </div>
-                 <div className="form-group">
-                   <label>Banner Image</label>
-                   <input name="image" type="file" required />
-                 </div>
+                <div className="form-group">
+                  <label>Desktop Banner (16:9)</label>
+                  <input name="pcImage" type="file" required />
+                </div>
+                <div className="form-group">
+                  <label>Mobile Banner (9:16)</label>
+                  <input name="mobileImage" type="file" required />
+                </div>
               </div>
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="admin-primary-btn" disabled={uploading}>
+                <button type="button" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="admin-primary-btn"
+                  disabled={uploading}
+                >
                   {uploading ? "Uploading..." : "Save Banner"}
                 </button>
               </div>
@@ -280,7 +368,9 @@ function CategoryManager() {
     if (data.success) setCategories(data.categories);
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
@@ -295,25 +385,31 @@ function CategoryManager() {
       cloudData.append("upload_preset", "Product Images");
       cloudData.append("cloud_name", "da1m7gtvf");
 
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: cloudData,
-      });
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: cloudData,
+        }
+      );
       const { secure_url } = await cloudRes.json();
 
       // Step B: Backend Save
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `JWT ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({
-          displayName: formData.get("displayName"),
-          image: secure_url,
-          order: Number(formData.get("order")),
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/categories/add`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `JWT ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            displayName: formData.get("displayName"),
+            image: secure_url,
+            order: Number(formData.get("order")),
+          }),
+        }
+      );
 
       if (res.ok) {
         setShowModal(false);
@@ -327,10 +423,11 @@ function CategoryManager() {
   };
 
   const deleteCategory = async (id) => {
-    if (!confirm("Are you sure? This will remove it from the homepage tray.")) return;
+    if (!confirm("Are you sure? This will remove it from the homepage tray."))
+      return;
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
       method: "DELETE",
-      headers: { "Authorization": `JWT ${localStorage.getItem("token")}` }
+      headers: { Authorization: `JWT ${localStorage.getItem("token")}` },
     });
     fetchCategories();
   };
@@ -340,12 +437,21 @@ function CategoryManager() {
       <div className="admin-grid-layout">
         {categories.map((cat) => (
           <div key={cat._id} className="admin-cat-card">
-            <img src={cat.image} alt={cat.displayName} className="admin-cat-img" />
+            <img
+              src={cat.image}
+              alt={cat.displayName}
+              className="admin-cat-img"
+            />
             <div className="admin-cat-info">
               <h4>{cat.displayName}</h4>
               <p>Slug: {cat.name}</p>
             </div>
-            <button className="delete-btn-overlay" onClick={() => deleteCategory(cat._id)}>🗑️</button>
+            <button
+              className="delete-btn-overlay"
+              onClick={() => deleteCategory(cat._id)}
+            >
+              🗑️
+            </button>
           </div>
         ))}
 
@@ -358,11 +464,17 @@ function CategoryManager() {
         <div className="admin-modal-overlay">
           <div className="admin-modal-card">
             <h3>Add Category Card</h3>
-            <p className="modal-subtitle">This will appear in the "Shop by Category" tray on the homepage.</p>
+            <p className="modal-subtitle">
+              This will appear in the "Shop by Category" tray on the homepage.
+            </p>
             <form onSubmit={handleCategorySubmit}>
               <div className="form-group">
                 <label>Display Name (e.g. Steel Bottles)</label>
-                <input name="displayName" required placeholder="Enter category name..." />
+                <input
+                  name="displayName"
+                  required
+                  placeholder="Enter category name..."
+                />
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -375,8 +487,14 @@ function CategoryManager() {
                 </div>
               </div>
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="admin-primary-btn" disabled={uploading}>
+                <button type="button" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="admin-primary-btn"
+                  disabled={uploading}
+                >
                   {uploading ? "Uploading..." : "Save Category"}
                 </button>
               </div>

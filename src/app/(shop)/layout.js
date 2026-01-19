@@ -2,7 +2,6 @@ import AnnouncementBar from "../components/AnnouncementBar";
 import Breadcrumbs from "../components/Breadcrumbs";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { WishlistProvider } from "../context/WishlistContext";
 import "../globals.css"
 
 export default async function ShopLayout({ children }) {

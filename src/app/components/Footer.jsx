@@ -1,83 +1,132 @@
-// src/components/Footer.jsx
-'use client'
-
+"use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Instagram, Facebook, Youtube, Twitter, Send } from "lucide-react";
 
 export default function Footer() {
-
-const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="site-footer">
-      <div className="footer-inner">
-        {/* Brand */}
-        <div className="footer-col brand">
+    <footer className="site-footer dark-theme">
+      <div className="footer-container">
+        {/* SECTION 1: BRAND */}
+        <div className="footer-brand-section">
           <Link href="/" className="footer-logo">
-            <span>BottleShop</span>
+            <Image
+              src="/logo1.png"
+              alt="Bouncy Bucket"
+              width={180}
+              height={60}
+              className="footer-logo-img brightness-filter"
+            />
           </Link>
-          <p className="footer-desc">
-            Premium bottles for every lifestyle — steel, glass, kids and
-            personalized designs. Quality you can trust.
+          <p className="footer-bio">
+            Premium hydration solutions designed for the modern lifestyle.
+            Engineering luxury, sustainability, and performance into every
+            bottle.
           </p>
-
-          <div className="socials">
-            <a href="#" aria-label="Instagram">IG</a>
-            <a href="#" aria-label="Facebook">FB</a>
-            <a href="#" aria-label="Twitter">X</a>
+          <div className="social-links">
+            <Link href="#" className="social-icon-btn">
+              <Instagram size={18} />
+            </Link>
+            <Link href="#" className="social-icon-btn">
+              <Facebook size={18} />
+            </Link>
+            <Link href="#" className="social-icon-btn">
+              <Youtube size={18} />
+            </Link>
+            <Link href="#" className="social-icon-btn">
+              <Twitter size={18} />
+            </Link>
           </div>
         </div>
 
-        {/* Shop */}
-        <div className="footer-col">
-          <h4>Shop</h4>
+        {/* SECTION 2: NAVIGATION */}
+        <div className="footer-links-group">
+          <h4>Collection</h4>
           <ul>
-            <li><Link href="/products?sort=newest">New Arrivals</Link></li>
-            <li><Link href="/products?category=steel">Steel Bottles</Link></li>
-            <li><Link href="/products?category=glass">Glass Bottles</Link></li>
-            <li><Link href="/products?category=kids">Kids Bottles</Link></li>
-            <li><Link href="/products?category=personalized">Personalized</Link></li>
+            <li>
+              <Link href="/shop">All Products</Link>
+            </li>
+            <li>
+              <Link href="/shop?category=Steel">Steel Series</Link>
+            </li>
+            <li>
+              <Link href="/shop?category=Glass">Glass Series</Link>
+            </li>
+            <li>
+              <Link href="/shop?sort=newest">Limited Drops</Link>
+            </li>
           </ul>
         </div>
 
-        {/* Help */}
-        <div className="footer-col">
-          <h4>Help</h4>
+        {/* SECTION 3: COMPANY */}
+        <div className="footer-links-group">
+          <h4>Assistance</h4>
           <ul>
-            <li><Link href="/account">My Account</Link></li>
-            <li><Link href="/orders">Orders</Link></li>
-            <li><Link href="/shipping">Shipping & Delivery</Link></li>
-            <li><Link href="/returns">Returns</Link></li>
-            <li><Link href="/contact">Contact Us</Link></li>
+            <li>
+              <Link href="/track-order">Track Order</Link>
+            </li>
+            <li>
+              <Link href="/faq">Common Questions</Link>
+            </li>
+            <li>
+              <Link href="/shipping">Shipping Info</Link>
+            </li>
+            <li>
+              <Link href="/contact">Contact Us</Link>
+            </li>
           </ul>
         </div>
 
-        {/* Newsletter */}
-        <div className="footer-col newsletter">
-          <h4>Stay in touch</h4>
-          <p>Get updates on new launches and special offers.</p>
+        {/* SECTION 4: NEWSLETTER */}
+        <div className="footer-newsletter">
+          <h4>The Guest List</h4>
+          <p>Get early access to drops and sustainable living insights.</p>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("Subscribed!");
-            }}
+            className="newsletter-form"
+            onSubmit={(e) => e.preventDefault()}
           >
-            <input type="email" placeholder="Enter your email" required />
-            <button type="submit">Subscribe</button>
+            <div className="input-wrapper">
+              <input type="email" placeholder="Email Address" required />
+              <button type="submit" className="newsletter-btn">
+                <Send size={16} />
+              </button>
+            </div>
           </form>
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="footer-bottom">
-        <span>© {new Date().getFullYear()} BottleShop. All rights reserved.</span>
-        <div className="legal">
-          <Link href="/privacy">Privacy Policy</Link>
-          <Link href="/terms">Terms</Link>
+        <div className="bottom-content">
+          <p>&copy; {currentYear} Bouncy Bucket Luxury. All Rights Reserved.</p>
+
+          <div className="payment-icons-row">
+            <div className="payment-badge invert">
+              <Image
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo.png"
+                alt="UPI"
+                width={45}
+                height={18}
+              />
+            </div>
+            <div className="payment-badge">
+              <Image
+                src="https://upload.wikimedia.org/wikipedia/commons/d/d6/Visa_2021.svg"
+                alt="Visa"
+                width={40}
+                height={15}
+              />
+            </div>
+            <div className="payment-badge">
+              <Image
+                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                alt="Mastercard"
+                width={30}
+                height={20}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </footer>

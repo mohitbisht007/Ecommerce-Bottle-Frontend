@@ -9,6 +9,10 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org', // Add this for the payment logos
+      },
     ],
   },
   

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccountSidebar from "@/app/components/AccountSidebar";
+import PageLoader from "./PageLoader";
 
 export default function MyProfilePage() {
   const router = useRouter();
@@ -110,10 +111,7 @@ export default function MyProfilePage() {
   // Loading / auth gate
   if (!mounted || !user) {
     return (
-      <div className="profile-loading-container">
-        <div className="spinner"></div>
-        <p>Verifying session...</p>
-      </div>
+      <PageLoader />
     );
   }
 

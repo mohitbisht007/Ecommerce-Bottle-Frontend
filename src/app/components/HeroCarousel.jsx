@@ -33,15 +33,26 @@ export default function HeroCarousel({ banners }) {
           <SwiperSlide key={banner._id || index}>
             <Link href={banner.link || "/shop"}>
               <div className="hero-slide-wrapper">
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.title || "Banner"}
-                  fill
-                  priority={index === 0}
-                  className="hero-img"
-                  sizes="100vw"
-                  quality={90}
-                />
+                {/* We use a standard <picture> tag wrapper to handle 
+                  switching the source without adding extra styled divs.
+                */}
+                <picture style={{ width: '100%', height: '100%' }}>
+                  {/* If screen is mobile, use mobileImageUrl */}
+                  <source 
+                    media="(max-width: 768px)" 
+                    srcSet={banner.mobileImageUrl || banner.imageUrl} 
+                  />
+                  {/* Default (PC) uses imageUrl */}
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title || "Banner"}
+                    fill
+                    priority={index === 0}
+                    className="hero-img"
+                    sizes="100vw"
+                    quality={90}
+                  />
+                </picture>
               </div>
             </Link>
           </SwiperSlide>
