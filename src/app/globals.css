@@ -2924,79 +2924,82 @@ to{transform:rotate(360deg)}
 .loader-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px); /* Modern glass effect */
+  background: rgba(255, 255, 255, 0.9); /* clean white background */
+  backdrop-filter: blur(8px); /* Blur the content behind */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* Higher than everything */
+  z-index: 9999;
 }
 
 .loader-content {
-  text-align: center;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
-.logo-wrapper {
+.logo-container {
   position: relative;
-  z-index: 2;
-  animation: pulse-logo 2s infinite ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* THE CONTINUOUS CIRCULAR SPIN */
 .spinning-logo {
   object-fit: contain;
-  /* If you want it to spin constantly, uncomment below: */
-  /* animation: spin 3s infinite linear; */
+  animation: smooth-rotate 2.5s infinite linear;
 }
 
-.loader-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 140px;
-  height: 140px;
-  border: 2px solid transparent;
-  border-top-color: #ec4899; /* Your brand pink */
-  border-radius: 50%;
-  animation: spin 1s infinite linear;
+/* LOADING TEXT STYLING */
+.loader-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .loader-text {
-  margin-top: 20px;
-  font-size: 12px;
-  letter-spacing: 3px;
+  font-size: 14px;
   text-transform: uppercase;
-  font-weight: 700;
+  letter-spacing: 4px;
+  font-weight: 600;
   color: #1a1a1a;
-  animation: fade-text 1.5s infinite;
+  margin-left: 4px; /* offset for the letter spacing to center it perfectly */
 }
 
-/* Animations */
-@keyframes spin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+/* MODERN DOT ANIMATION */
+.dot-flashing {
+  position: relative;
+  width: 4px;
+  height: 4px;
+  border-radius: 5px;
+  background-color: #ec4899; /* Your Brand Pink */
+  color: #ec4899;
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
 }
 
-@keyframes pulse-logo {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.9); opacity: 0.8; }
+/* KEYFRAMES */
+@keyframes smooth-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes fade-text {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+@keyframes dot-flashing {
+  0% { opacity: 0.2; }
+  50%, 100% { opacity: 1; }
 }
 
-/* Mobile Adjustments */
+/* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
-  .loader-ring {
-    width: 100px;
-    height: 100px;
-  }
   .spinning-logo {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
+  }
+  .loader-text {
+    font-size: 12px;
+    letter-spacing: 3px;
   }
 }
 

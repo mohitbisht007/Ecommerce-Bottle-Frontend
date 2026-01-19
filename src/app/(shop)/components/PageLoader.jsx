@@ -5,19 +5,20 @@ export default function PageLoader() {
   return (
     <div className="loader-overlay">
       <div className="loader-content">
-        {/* Replace /logo.png with your actual logo path */}
-        <div className="logo-wrapper">
+        <div className="logo-container">
           <Image 
-            src="/logo.png" 
-            alt="Logo Loader" 
-            width={100} 
-            height={100} 
+            src="/logo3.png" 
+            alt="Bouncy Bucket Loader" 
+            width={200} 
+            height={200} 
             priority
             className="spinning-logo"
           />
         </div>
-        <div className="loader-ring"></div>
-        <p className="loader-text">Loading Excellence...</p>
+        <div className="loader-footer">
+          <span className="loader-text">Loading</span>
+          <span className="dot-flashing"></span>
+        </div>
       </div>
     </div>
   );
