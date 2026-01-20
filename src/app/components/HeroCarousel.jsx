@@ -21,7 +21,7 @@ export default function HeroCarousel({ banners }) {
         effect="fade"
         loop={banners.length > 1}
         speed={1000}
-        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        autoplay={{ delay: 2000, disableOnInteraction: true }}
         pagination={{ clickable: true }}
         navigation={{
           nextEl: ".custom-next",

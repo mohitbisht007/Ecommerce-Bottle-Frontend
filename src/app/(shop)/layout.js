@@ -2,6 +2,7 @@ import AnnouncementBar from "../components/AnnouncementBar";
 import Breadcrumbs from "../components/Breadcrumbs";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import OfferModal from "../components/OfferModal";
 import "../globals.css"
 
 export default async function ShopLayout({ children }) {
@@ -26,6 +27,7 @@ export default async function ShopLayout({ children }) {
       <Header initialCategories={categories} />
       <Breadcrumbs />
         <main style={{ minHeight: '80vh' }}>
+          <OfferModal />
           {children}
         </main>
       <Footer />

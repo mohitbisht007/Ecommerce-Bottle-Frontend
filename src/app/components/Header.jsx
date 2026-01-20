@@ -198,7 +198,7 @@ export default function Header() {
               <Image
                 src="/logo2.png" // Path from your public folder
                 alt="Bouncy Bucket Logo"
-                width={200} // Adjust based on your design
+                width={150} // Adjust based on your design
                 height={40} // Adjust based on your design
                 priority // CRITICAL: Tells Next.js to load this first!
                 className="header-logo"
@@ -453,7 +453,6 @@ export default function Header() {
                     onClick={() => setShowSidebar(false)}
                   >
                     <div className="pill-content">
-                      <span className="pill-index">0{index + 1}</span>
                       <span className="pill-name">{cat.displayName}</span>
                     </div>
                     <div className="pill-decoration"></div>

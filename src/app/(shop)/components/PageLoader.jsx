@@ -7,10 +7,10 @@ export default function PageLoader() {
       <div className="loader-content">
         <div className="logo-container">
           <Image 
-            src="/logo3.png" 
+            src="/Loader.png" 
             alt="Bouncy Bucket Loader" 
-            width={200} 
-            height={200} 
+            width={130} 
+            height={130} 
             priority
             className="spinning-logo"
           />

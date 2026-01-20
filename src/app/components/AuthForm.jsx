@@ -1,15 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function AuthPage({ isLogin = false }) {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -17,27 +18,27 @@ export default function AuthPage({ isLogin = false }) {
   }, []);
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: ''
+    name: "",
+    email: "",
+    password: "",
   });
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/google-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Google login failed');
+      if (!res.ok) throw new Error(data.message || "Google login failed");
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('bottle_user', JSON.stringify(data.user));
-      window.dispatchEvent(new CustomEvent('bottle_auth_changed', { detail: { user: data.user } }));
-      router.push('/');
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("bottle_user", JSON.stringify(data.user));
+      window.dispatchEvent(new CustomEvent("bottle_auth_changed", { detail: { user: data.user } }));
+      router.push("/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,40 +52,26 @@ export default function AuthPage({ isLogin = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/${isLogin ? 'login' : 'register'}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/${isLogin ? "login" : "register"}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(
-            isLogin
-              ? { email: form.email, password: form.password }
-              : form
-          )
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(isLogin ? { email: form.email, password: form.password } : form),
         }
       );
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Something went wrong");
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Something went wrong');
-      }
-
-      // store auth
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('bottle_user', JSON.stringify(data.user));
-
-      // notify app (header, etc.)
-      window.dispatchEvent(
-        new CustomEvent('bottle_auth_changed', { detail: { user: data.user } })
-      );
-
-      // redirect to home
-      router.push('/');
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("bottle_user", JSON.stringify(data.user));
+      window.dispatchEvent(new CustomEvent("bottle_auth_changed", { detail: { user: data.user } }));
+      router.push("/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,121 +81,95 @@ export default function AuthPage({ isLogin = false }) {
 
   return (
     <GoogleOAuthProvider clientId="874365563204-oisqt15mvfmb8bb4cpcik1om0kp1gb31.apps.googleusercontent.com">
-      <div className="auth-container">
-        <div className="auth-card">
-
-          {/* LEFT SIDE: FORM */}
-          <div className="auth-form-section">
-            <div className="form-header">
-              <div className="auth-logo">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <rect width="40" height="40" rx="10" fill="#7C3AED" />
-                  <path d="M12 20C15 14 25 14 28 20" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              </div>
-              <h1>{isLogin ? 'Welcome Back' : 'Sign up for an account'}</h1>
-              <p>Enter your details to {isLogin ? 'Log in' : 'Sign up'}.</p>
+      <div className="premium-auth-wrapper">
+        <div className="auth-inner-card">
+          
+          {/* FORM SECTION */}
+          <div className="auth-main">
+            <div className="auth-header">
+              <h2 className="brand-accent">BOUNCY BUCKET</h2>
+              <h1>{isLogin ? "Welcome Back" : "Create Account"}</h1>
+              <p>{isLogin ? "Please enter your details to sign in" : "Join our community of elite hydration"}</p>
             </div>
 
-            <div className="social-auth">
-              <button className="social-btn"><img src="/apple.svg" alt="Apple" /></button>
-              <div className="google-btn-wrapper">
-                {mounted && (
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError("Google Login Failed")}
-                    shape="circle"
-                    theme="outline"
-                  />
-                )}
-              </div>
-              <button className="social-btn"><img src="/linkedin.svg" alt="LinkedIn" /></button>
+            <div className="google-auth-container">
+              {mounted && (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Google Login Failed")}
+                  theme="filled_blue"
+                  shape="pill"
+                  text={isLogin ? "signin_with" : "signup_with"}
+                  width="100%"
+                />
+              )}
             </div>
 
-            <div className="separator"><span>OR</span></div>
+            <div className="divider-text">
+              <span>OR CONTINUE WITH EMAIL</span>
+            </div>
 
-            <form className="auth-fields" onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="auth-form-fields">
               {!isLogin && (
-                <div className="input-group">
-                  <label>Full Name*</label>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Adam Smith"
-                    required
-                    onChange={handleChange}
-                  />
+                <div className="premium-input-group">
+                  <label>Full Name</label>
+                  <div className="input-field-wrapper">
+                    <User className="input-icon" size={18} />
+                    <input type="text" name="name" placeholder="Adam Smith" required onChange={handleChange} />
+                  </div>
                 </div>
               )}
 
-              <div className="input-group">
-                <label>Email*</label>
-                <div className="input-with-icon">
-                  <span className="icon">✉</span>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="example@mail.com"
-                    required
-                    onChange={handleChange}
-                  />
+              <div className="premium-input-group">
+                <label>Email Address</label>
+                <div className="input-field-wrapper">
+                  <Mail className="input-icon" size={18} />
+                  <input type="email" name="email" placeholder="example@mail.com" required onChange={handleChange} />
                 </div>
               </div>
 
-              <div className="input-group">
-                <label>{isLogin ? 'Password*' : 'New Password*'}</label>
-                <div className="input-with-icon">
-                  <span className="icon">🔒</span>
-                  <input
-                    type={showPass ? "text" : "password"}
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                    onChange={handleChange}
-                  />
-                  <button
-                    type="button"
-                    className="toggle-pass"
-                    onClick={() => setShowPass(!showPass)}
-                  >
-                    {showPass ? '👁️' : '🙈'}
+              <div className="premium-input-group">
+                <label>Password</label>
+                <div className="input-field-wrapper">
+                  <Lock className="input-icon" size={18} />
+                  <input type={showPass ? "text" : "password"} name="password" placeholder="••••••••" required onChange={handleChange} />
+                  <button type="button" className="pass-toggle-btn" onClick={() => setShowPass(!showPass)}>
+                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-              {error && <p className="form-error">{error}</p>}
+              {error && <div className="auth-error-msg">{error}</div>}
 
-              <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? 'Please wait...' : isLogin ? 'Log IN' : 'Sign UP'}
+              <button type="submit" className="premium-submit-btn" disabled={loading}>
+                {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
+                {!loading && <ArrowRight size={18} />}
               </button>
             </form>
 
-            <p className="switch-auth">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
+            <div className="auth-footer-link">
+              {isLogin ? "New to Bouncy Bucket?" : "Already a member?"}
               <Link href={isLogin ? "/signup" : "/login"}>
-                {isLogin ? ' Sign up' : ' Log in'}
+                {isLogin ? " Join Now" : " Log In"}
               </Link>
-            </p>
+            </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="auth-visual-section">
-            <div className="visual-content">
-              <div className="floating-stats">
-                <div className="stat-card">
-                  <span>Total Sales</span>
-                  <strong>$205.25k</strong>
-                  <div className="mini-chart"></div>
+          {/* VISUAL SECTION (Desktop Only) */}
+          <div className="auth-visual">
+            <div className="visual-overlay"></div>
+            <div className="visual-content-box">
+              <span className="visual-tag">Luxury Hydration</span>
+              <h2>Purity in Every Drop.</h2>
+              <p>Experience the intersection of high-performance materials and sustainable luxury.</p>
+              
+              <div className="visual-feature-card">
+                <div className="feature-icon">✨</div>
+                <div>
+                  <h4>Lifetime Warranty</h4>
+                  <p>Quality that lasts generations.</p>
                 </div>
               </div>
-              <div className="hero-text">
-                <h2>Your Commerce,<br />Your Control.</h2>
-                <p>
-                  Receive personalized tips and recommendations based on your goals.
-                  Our insights help you make informed decisions.
-                </p>
-              </div>
-              <div className="bg-circles"></div>
             </div>
           </div>
 
