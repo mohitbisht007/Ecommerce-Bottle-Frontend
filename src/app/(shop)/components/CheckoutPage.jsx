@@ -32,6 +32,7 @@ export default function CheckoutPage() {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailInput, setEmailInput] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [newAddr, setNewAddr] = useState({
     fullName: "",
     phone: "",
@@ -41,14 +42,22 @@ export default function CheckoutPage() {
     state: "",
   });
 
-  
+
 
   useEffect(() => {
     setHasMounted(true);
     document.title = "Checkout | BouncyBucket";
+
     const token = localStorage.getItem("token");
-    if (!token) {
-      setShowEmailModal(true); // Open the identification popup
+    const storedUser = JSON.parse(localStorage.getItem("bottle_user") || "{}");
+
+    if (token) {
+      // If logged in, set email and fetch addresses immediately
+      setUserEmail(storedUser.email || "");
+      fetchAddresses(token);
+      setShowEmailModal(false);
+    } else {
+      setShowEmailModal(true);
     }
   }, []);
 
@@ -58,23 +67,22 @@ export default function CheckoutPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/checkout/check-email`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: emailInput }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkout/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput }),
+      });
       const data = await res.json();
 
-      setEmailInput(emailInput); // Set the global email state
-      setIsAddingAddress(!data.exists); // If doesn't exist, show form
+      setUserEmail(emailInput); // Store for the address form
       if (data.exists) {
-        setSavedAddresses(data.addresses);
+        setSavedAddresses(data.addresses || []);
         setSelectedAddressId(data.addresses[0]?._id);
+        setIsAddingAddress(false);
+      } else {
+        setIsAddingAddress(true); // Non-existing user must add address
       }
-      setShowEmailModal(false); // Close popup and enter Step 2
+      setShowEmailModal(false);
     } catch (err) {
       console.error("Identification failed", err);
     } finally {
@@ -82,12 +90,14 @@ export default function CheckoutPage() {
     }
   };
 
-  const fetchAddresses = async (token) => {
+
+  async function fetchAddresses (token) {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
         headers: { Authorization: `JWT ${token}` },
       });
       const data = await res.json();
+      console.log(data)
       const userAddresses = data.user?.addresses || [];
       setSavedAddresses(userAddresses);
       if (userAddresses.length > 0) {
@@ -98,6 +108,8 @@ export default function CheckoutPage() {
       console.error(err);
     }
   };
+
+  console.log(savedAddresses)
 
   const handlePincodeChange = async (e) => {
     const pin = e.target.value;
@@ -319,9 +331,8 @@ export default function CheckoutPage() {
           {[1, 2, 3].map((num) => (
             <div
               key={num}
-              className={`progress-step ${step === num ? "active" : ""} ${
-                step > num ? "completed" : ""
-              }`}
+              className={`progress-step ${step === num ? "active" : ""} ${step > num ? "completed" : ""
+                }`}
             >
               <div className="step-circle">
                 {step > num ? <Check size={16} /> : num}
@@ -408,9 +419,8 @@ export default function CheckoutPage() {
                       {savedAddresses.map((addr) => (
                         <div
                           key={addr._id}
-                          className={`address-card ${
-                            selectedAddressId === addr._id ? "selected" : ""
-                          }`}
+                          className={`address-card ${selectedAddressId === addr._id ? "selected" : ""
+                            }`}
                           onClick={() => setSelectedAddressId(addr._id)}
                         >
                           <div className="radio-circle"></div>
@@ -446,6 +456,15 @@ export default function CheckoutPage() {
                             setNewAddr({ ...newAddr, fullName: e.target.value })
                           }
                           required
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Email Address*</label>
+                        <input
+                          type="email"
+                          value={userEmail}
+                          readOnly // Prefilled and locked
+                          className="input-readonly"
                         />
                       </div>
                       <div className="input-group">

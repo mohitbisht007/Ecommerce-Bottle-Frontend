@@ -15,7 +15,7 @@ export default function Footer() {
             <Image
               src="/logo1.png"
               alt="Bouncy Bucket"
-              width={180}
+              width={100}
               height={60}
               className="footer-logo-img brightness-filter"
             />
