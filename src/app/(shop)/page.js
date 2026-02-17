@@ -3,6 +3,7 @@ import HeroCarousel from '../components/HeroCarousel';
 import CategoryTray from '../components/CategoryTray';
 import PriceRangeTray from '../components/PriceRangeTray';
 import ComparisonBanner from './components/ComparisonBanner';
+import DeliveryRadar from './components/DeliveryRadar';
 
 // 1. Metadata remains the same
 export const metadata = {
@@ -51,6 +52,9 @@ export default async function HomePage() {
     <main>
       {/* 2. H1 is critical for SEO. Usually placed in the Hero */}
       <HeroCarousel banners={data.banners} />
+
+      < DeliveryRadar />
+
       <CategoryTray categories={data.categories} />
 
       {/* 3. Passing pre-fetched products to avoid "loading skeletons" */}
