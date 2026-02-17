@@ -3372,7 +3372,7 @@ to{transform:rotate(360deg)}
 }
 
 .velocity-title {
-  font-size: 64px;
+  font-size: 45px;
   line-height: 1.1;
   font-weight: 800;
   margin-bottom: 20px;
@@ -3674,7 +3674,7 @@ to{transform:rotate(360deg)}
   }
 
   .velocity-title {
-    font-size: 42px; /* Slightly smaller for mobile */
+    font-size: 30px; /* Slightly smaller for mobile */
   }
 
   .velocity-desc {
@@ -3724,7 +3724,7 @@ to{transform:rotate(360deg)}
 /* Extra small screens fix (e.g. iPhone SE) */
 @media (max-width: 380px) {
   .velocity-title {
-    font-size: 36px;
+    font-size: 30px;
   }
   .pin-icon {
     display: none; /* Hide icon on tiny screens to save space */
@@ -3734,6 +3734,102 @@ to{transform:rotate(360deg)}
   }
 }
 
+.priority-hero-header {
+  text-align: center;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
+.badge-pulse-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  background: rgba(236, 72, 153, 0.1);
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.live-signal {
+  width: 8px;
+  height: 8px;
+  background: #ec4899;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.live-signal-pulse {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #ec4899;
+  border-radius: 50%;
+  animation: signal-expand 2s infinite;
+}
+
+.badge-text {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ec4899;
+}
+
+.priority-main-title {
+  font-size: clamp(32px, 5vw, 68px); /* Responsive size */
+  line-height: 1.1;
+  font-weight: 800;
+  color: #fff;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* THE PREMIUM BLINK (GLOW) */
+.glitch-glow {
+  color: #ec4899;
+  position: relative;
+  /* Soft, sophisticated blinking animation */
+  animation: premium-glow-blink 3s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(236, 72, 153, 0);
+}
+
+.header-underline {
+  width: 80px;
+  height: 4px;
+  background: #ec4899;
+  margin-top: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+}
+
+/* ANIMATIONS */
+@keyframes signal-expand {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+@keyframes premium-glow-blink {
+  0%, 100% { 
+    opacity: 1; 
+    text-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+  }
+  50% { 
+    opacity: 0.7; 
+    text-shadow: 0 0 5px rgba(236, 72, 153, 0.1);
+  }
+}
+
+/* MOBILE FIX */
+@media (max-width: 768px) {
+  .priority-hero-header {
+    padding-bottom: 40px;
+  }
+  .priority-main-title {
+    padding: 0 20px;
+  }
+}
 
 /* -------------------------------------------------------------------------------------------------------- */

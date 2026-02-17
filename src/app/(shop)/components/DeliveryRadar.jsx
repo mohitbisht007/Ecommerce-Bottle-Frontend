@@ -64,6 +64,19 @@ export default function DeliveryRadar() {
 
   return (
     <section className="velocity-radar-root">
+      <div className="priority-hero-header">
+        <div className="badge-pulse-group">
+          <span className="live-signal"></span>
+          <span className="live-signal-pulse"></span>
+          <span className="badge-text">LIVE PRIORITY HUB</span>
+        </div>
+
+        <h2 className="priority-main-title">
+          Get Your Personalized Bottle <br />
+          Within <span className="glitch-glow">90 Minutes.</span>
+        </h2>
+        <div className="header-underline"></div>
+      </div>
       <div className="velocity-container">
         <div className="velocity-text-content">
           <div className="live-status-pill">
