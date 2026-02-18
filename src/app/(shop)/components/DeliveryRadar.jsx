@@ -1,13 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import dynamic from 'next/dynamic';
 import { calculateDistance } from "@/app/helpers/deliveryLogic";
 import { MapPin, Zap, Truck, Globe, Loader2, Navigation } from "lucide-react";
 
-// SAFER DYNAMIC IMPORT
-const MapComponent = dynamic(() => import("./MapVisual"), {
+const MapComponent = dynamic(() => import("./MapVisual"), { 
   ssr: false,
-  loading: () => <div className="map-loader">Initializing Satellite...</div>
+  loading: () => <div className="map-loading-placeholder">Syncing Satellites...</div>
 });
 
 const HUB_COORDS = [28.5355, 77.2739];
@@ -22,7 +21,7 @@ export default function DeliveryRadar() {
     e.preventDefault();
     if (pincode.length < 6) return;
     setLoading(true);
-    setResult(null);
+    setResult(null); // Clear previous
 
     try {
       const res = await fetch(`https://api.zippopotam.us/in/${pincode}`);
@@ -33,18 +32,21 @@ export default function DeliveryRadar() {
         const lat = parseFloat(latitude);
         const lng = parseFloat(longitude);
         const distance = calculateDistance(lat, lng);
-
+        
         setUserCoords([lat, lng]);
         processResult(distance, city);
       } else {
-        throw new Error("Pincode not found");
+        throw new Error("Invalid Pincode");
       }
     } catch (err) {
-      // Demo Fallback
-      const demoDistance = pincode.startsWith("11") ? 8 : 35;
-      const demoCoords = pincode.startsWith("11") ? [28.6139, 77.2090] : [28.4595, 77.0266];
+      // ALWAYS SHOW RESULT FOR DEMO (Fallback)
+      const isDelhi = pincode.startsWith("11");
+      const demoDistance = isDelhi ? 8.4 : 45.2;
+      const demoCity = isDelhi ? "South Delhi" : "NCR Region";
+      const demoCoords = isDelhi ? [28.6139, 77.2090] : [28.4595, 77.0266];
+      
       setUserCoords(demoCoords);
-      processResult(demoDistance, "Delhi NCR Area");
+      processResult(demoDistance, demoCity);
     } finally {
       setLoading(false);
     }
@@ -53,86 +55,84 @@ export default function DeliveryRadar() {
   const processResult = (distance, city) => {
     let status = {};
     if (distance <= 10) {
-      status = { type: 'EXPRESS', time: '90 MINS', desc: 'Instant Customization', icon: <Zap size={24} />, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
+      status = { type: 'EXPRESS', time: '90 MINS', desc: 'Priority Crafting', icon: <Zap size={22} />, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
     } else if (distance <= 50) {
-      status = { type: 'NCR', time: 'SAME DAY', desc: 'City Wide Priority', icon: <Truck size={24} />, color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)' };
+      status = { type: 'NCR', time: 'SAME DAY', desc: 'City Wide Sprint', icon: <Truck size={22} />, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' };
     } else {
-      status = { type: 'NATIONAL', time: '2-4 DAYS', desc: 'Premium Shipping', icon: <Globe size={24} />, color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
+      status = { type: 'NATIONAL', time: '2-4 DAYS', desc: 'Premium Freight', icon: <Globe size={22} />, color: '#64748b', bg: 'rgba(100, 116, 139, 0.1)' };
     }
     setResult({ ...status, city, distance: distance.toFixed(1) });
   };
 
   return (
-    <section className="velocity-radar-root">
+    <section className="velocity-root">
+      <div className="speed-line sl-1"></div>
+      <div className="speed-line sl-2"></div>
+
       <div className="priority-hero-header">
-        <div className="badge-pulse-group">
-          <span className="live-signal"></span>
-          <span className="live-signal-pulse"></span>
-          <span className="badge-text">LIVE PRIORITY HUB</span>
+        <div className="status-badge">
+          <span className="pulse-dot"></span>
+          <span className="badge-txt">LIVE LOGISTICS ACTIVE</span>
         </div>
-
-        <h2 className="priority-main-title">
-          Get Your Personalized Bottle <br />
-          Within <span className="glitch-glow">90 Minutes.</span>
+        <h2 className="hero-title">
+          Customized Luxury <br />
+          In <span className="speed-text">90 Minutes.</span>
         </h2>
-        <div className="header-underline"></div>
+        <div className="velocity-loader-bar"></div>
       </div>
-      <div className="velocity-container">
-        <div className="velocity-text-content">
-          <div className="live-status-pill">
-            <span className="live-dot"></span>
-            HUB: OKHLA ACTIVE
-          </div>
-          <h2 className="velocity-title">The Speed of <br /><span>Hydration.</span></h2>
-          <p className="velocity-desc">Enter your pincode to visualize your luxury delivery route.</p>
 
-          <form onSubmit={checkDelivery} className="modern-pincode-box">
-            <MapPin className="pin-icon" size={20} />
-            <input
-              type="text"
-              placeholder="Enter Pincode..."
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              maxLength={6}
-            />
-            <button type="submit" className="check-btn" disabled={loading}>
-              {loading ? <Loader2 className="spin" /> : "Trace Route"}
+      <div className="velocity-grid">
+        <div className="v-content">
+          <div className="hub-tag">
+            <Navigation size={14} className="icon-pink" /> 
+            <span>CENTRAL HUB: OKHLA, NEW DELHI</span>
+          </div>
+          <h3 className="v-headline">Is your zone <span>Express Ready?</span></h3>
+          <p className="v-sub">Every bottle is hand-finished and dispatched instantly from our Okhla facility.</p>
+
+          <form onSubmit={checkDelivery} className="v-input-box">
+            <div className="input-flex">
+              <MapPin size={20} className="icon-pink" />
+              <input 
+                type="text" 
+                placeholder="Enter Pincode" 
+                value={pincode} 
+                onChange={(e) => setPincode(e.target.value)} 
+                maxLength={6} 
+              />
+            </div>
+            <button type="submit" className="v-submit" disabled={loading}>
+              {loading ? <Loader2 className="spin" /> : "ENGAGE ROUTE"}
             </button>
           </form>
 
+          {/* THE WORKING RESULT CARD */}
           {result && (
-            <div className="velocity-result-card active" style={{ '--accent': result.color }}>
-              <div className="card-glass-glow"></div>
-
-              <div className="result-main-flex">
-                <div className="res-icon-wrapper" style={{ backgroundColor: result.bg, color: result.color }}>
+            <div className={`v-result-card ${result ? 'active' : ''}`} style={{ '--accent': result.color }}>
+              <div className="v-res-top">
+                <div className="v-res-icon" style={{ backgroundColor: result.bg, color: result.color }}>
                   {result.icon}
-                  <div className="icon-pulse" style={{ backgroundColor: result.color }}></div>
                 </div>
-
-                <div className="res-info">
-                  <div className="res-header">
-                    <h4>{result.time} DELIVERY</h4>
-                    <span className="distance-badge">{result.distance}km</span>
-                  </div>
-                  <p>{result.desc} to <span className="city-highlight">{result.city}</span></p>
+                <div className="v-res-txt">
+                  <span className="v-res-label" style={{ color: result.color }}>{result.time} DELIVERY</span>
+                  <h4>{result.city} Eligible</h4>
                 </div>
+                <div className="v-dist">{result.distance}km</div>
               </div>
-
-              <div className="card-footer-progress">
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ backgroundColor: result.color }}></div>
+              <div className="v-res-footer">
+                <div className="v-progress-bg">
+                  <div className="v-progress-fill" style={{ background: result.color }}></div>
                 </div>
-                <span>Route Calculated Successfully</span>
+                <p>{result.desc} available for your location</p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="velocity-visual-wrapper">
-          <div className="radar-glass-circle">
+        <div className="v-visual">
+          <div className="v-map-frame">
             <MapComponent hubCoords={HUB_COORDS} userCoords={userCoords} resultColor={result?.color} />
-            <div className="radar-scanner"></div>
+            <div className="v-map-overlay"></div>
           </div>
         </div>
       </div>
