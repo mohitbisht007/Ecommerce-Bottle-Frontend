@@ -7,7 +7,6 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { label: 'Dashboard', path: '/admin', icon: '📊' },
     { label: 'Orders', path: '/admin/orders', icon: '📦' },
     { label: 'Products', path: '/admin/products', icon: '🍾' },
     { label: 'Customers', path: '/admin/users', icon: '👥' },

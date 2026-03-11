@@ -45,8 +45,8 @@ export default function ProductEditor({ productId = null }) {
           });
           const prodData = await prodRes.json();
           if (prodRes.ok) {
-            setForm({ 
-              ...prodData, 
+            setForm({
+              ...prodData,
               tags: prodData.tags ? prodData.tags.join(", ") : "",
               compareAtPrice: prodData.compareAtPrice || ""
             });
@@ -86,6 +86,32 @@ export default function ProductEditor({ productId = null }) {
   const handleVariantInfoChange = (index, field, value) => {
     const newVariants = [...variants];
     newVariants[index][field] = value;
+    setVariants(newVariants);
+  };
+
+  const removeVariantImage = (vIdx, imgIdx) => {
+    const newVariants = [...variants];
+
+    // 1. Revoke the Blob URL to prevent memory leaks (if it's a local preview)
+    const imageToRemove = newVariants[vIdx].images[imgIdx];
+    if (imageToRemove.startsWith("blob:")) {
+      URL.revokeObjectURL(imageToRemove);
+    }
+
+    // 2. Remove from the preview array
+    newVariants[vIdx].images = newVariants[vIdx].images.filter((_, i) => i !== imgIdx);
+
+    // 3. Remove from the file upload array
+    // Note: We only filter imageFiles if the image being removed was a new upload
+    // (Existing images from the DB don't have a corresponding entry in imageFiles)
+    const totalExistingImages = newVariants[vIdx].images.filter(img => img.startsWith("http")).length;
+
+    // If the removed image was a new file, calculate its relative index in imageFiles
+    const relativeFileIdx = imgIdx - totalExistingImages;
+    if (relativeFileIdx >= 0) {
+      newVariants[vIdx].imageFiles = newVariants[vIdx].imageFiles.filter((_, i) => i !== relativeFileIdx);
+    }
+
     setVariants(newVariants);
   };
 
@@ -247,13 +273,65 @@ export default function ProductEditor({ productId = null }) {
                     <label>Swatch</label>
                     <input type="color" value={v.colorCode} onChange={(e) => handleVariantInfoChange(vIdx, "colorCode", e.target.value)} />
                   </div>
-                  <button type="button" onClick={() => removeVariant(vIdx)} style={{ color: "red", alignSelf: 'flex-end', marginBottom: '10px' }}>Remove</button>
+                  <button
+                    type="button"
+                    className="remove-var-btn"
+                    onClick={(e) => {
+                      e.preventDefault(); // Extra safety
+                      removeVariant(vIdx);
+                    }}
+                    style={{ color: "red", alignSelf: 'flex-end', marginBottom: '10px' }}
+                  >
+                    Remove
+                  </button>
                 </div>
-                <div className="image-uploader-grid">
-                  {v.images.map((src, i) => <div key={i} className="image-preview"><img src={src} alt="v" /></div>)}
-                  <label className="upload-placeholder">
+                <div className="image-uploader-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+                  {v.images.map((src, i) => (
+                    <div key={i} className="image-preview" style={{ position: 'relative', width: '80px', height: '80px' }}>
+                      <img
+                        src={src}
+                        alt="Variant"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVariantImage(vIdx, i)}
+                        style={{
+                          position: 'absolute',
+                          top: '-5px',
+                          right: '-5px',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  <label className="upload-placeholder" style={{
+                    width: '80px',
+                    height: '80px',
+                    border: '2px dashed #ccc',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}>
                     <input type="file" multiple onChange={(e) => handleVariantImageChange(vIdx, e)} hidden />
-                    <span>+ Add Images</span>
+                    <span style={{ fontSize: '20px', color: '#666' }}>+</span>
                   </label>
                 </div>
               </div>

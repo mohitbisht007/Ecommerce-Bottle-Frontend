@@ -4,6 +4,8 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import OfferModal from "../components/OfferModal";
 import "../globals.css"
+import ModalManager from "../components/ModalManager";
+import DeliveryContextBar from "./components/DeliveryContextBar";
 
 export default async function ShopLayout({ children }) {
   const base = process.env.NEXT_PUBLIC_API_URL;
@@ -25,11 +27,12 @@ export default async function ShopLayout({ children }) {
     <>
       <AnnouncementBar />
       <Header initialCategories={categories} />
+      < DeliveryContextBar />
       <Breadcrumbs />
-        <main style={{ minHeight: '80vh' }}>
-          <OfferModal />
-          {children}
-        </main>
+      <main style={{ minHeight: '80vh' }}>
+        <ModalManager/>
+        {children}
+      </main>
       <Footer />
     </>
   );

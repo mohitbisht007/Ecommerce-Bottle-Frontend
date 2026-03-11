@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/app/components/ProductCard";
 import { SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import { useTransition } from "react";
+import GenericModal from "@/app/components/GenericModal";
 
 // --- 1. FilterGroups NOW USES availableCategories ---
 const FilterGroups = ({
@@ -35,60 +36,60 @@ const FilterGroups = ({
 
     {/* ... Price Range, Color Palette, and Capacity sections remain exactly same ... */}
     <div className="filter-section luxury-price-section">
-        <div className="filter-header-flex">
-          <h3>Price Range</h3>
-          <div className="price-input-display">
-            <span className="currency-symbol">₹</span>
-            <input
-              type="number"
-              value={priceRange}
-              onChange={(e) => setPriceRange(e.target.value)}
-              onBlur={() => updateFilter({ maxPrice: priceRange })}
-              className="price-num-input"
-            />
-          </div>
-        </div>
-        <div className="slider-container">
-          <div className="slider-progress" style={{ width: `${((priceRange - 200) / (5000 - 200)) * 100}%` }}></div>
+      <div className="filter-header-flex">
+        <h3>Price Range</h3>
+        <div className="price-input-display">
+          <span className="currency-symbol">₹</span>
           <input
-            type="range" min="200" max="5000" step="100"
+            type="number"
             value={priceRange}
             onChange={(e) => setPriceRange(e.target.value)}
-            onMouseUp={() => updateFilter({ maxPrice: priceRange })}
-            className="luxury-slider"
+            onBlur={() => updateFilter({ maxPrice: priceRange })}
+            className="price-num-input"
           />
         </div>
+      </div>
+      <div className="slider-container">
+        <div className="slider-progress" style={{ width: `${((priceRange - 200) / (5000 - 200)) * 100}%` }}></div>
+        <input
+          type="range" min="200" max="5000" step="100"
+          value={priceRange}
+          onChange={(e) => setPriceRange(e.target.value)}
+          onMouseUp={() => updateFilter({ maxPrice: priceRange })}
+          className="luxury-slider"
+        />
+      </div>
     </div>
-    
+
     {/* Color Palette */}
     <div className="filter-section">
-        <h3>Color Palette</h3>
-        <div className="swatch-row">
-          {[{ name: "Black", hex: "#1a1a1a" }, { name: "Blue", hex: "#2563eb" }, { name: "Silver", hex: "#cbd5e1" }, { name: "Pink", hex: "#db2777" }, { name: "Green", hex: "#16a34a" }].map((color) => (
-            <button
-              key={color.name}
-              className={`color-dot ${currentColor === color.name ? "selected" : ""}`}
-              style={{ backgroundColor: color.hex }}
-              onClick={() => updateFilter({ color: currentColor === color.name ? "" : color.name })}
-            />
-          ))}
-        </div>
+      <h3>Color Palette</h3>
+      <div className="swatch-row">
+        {[{ name: "Black", hex: "#1a1a1a" }, { name: "Blue", hex: "#2563eb" }, { name: "Silver", hex: "#cbd5e1" }, { name: "Pink", hex: "#db2777" }, { name: "Green", hex: "#16a34a" }].map((color) => (
+          <button
+            key={color.name}
+            className={`color-dot ${currentColor === color.name ? "selected" : ""}`}
+            style={{ backgroundColor: color.hex }}
+            onClick={() => updateFilter({ color: currentColor === color.name ? "" : color.name })}
+          />
+        ))}
+      </div>
     </div>
 
     {/* Capacity */}
     <div className="filter-section">
-        <h3>Size / Capacity</h3>
-        <div className="capacity-grid">
-          {["500ml", "750ml", "1L", "2L"].map((size) => (
-            <button
-              key={size}
-              className={`capacity-pill ${currentCapacity === size ? "active" : ""}`}
-              onClick={() => updateFilter({ capacity: currentCapacity === size ? "" : size })}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
+      <h3>Size / Capacity</h3>
+      <div className="capacity-grid">
+        {["500ml", "750ml", "1L", "2L"].map((size) => (
+          <button
+            key={size}
+            className={`capacity-pill ${currentCapacity === size ? "active" : ""}`}
+            onClick={() => updateFilter({ capacity: currentCapacity === size ? "" : size })}
+          >
+            {size}
+          </button>
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -98,6 +99,8 @@ export default function ShopClient({ initialProducts, availableCategories }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [deliveryData, setDeliveryData] = useState(null);
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [priceRange, setPriceRange] = useState(searchParams.get("maxPrice") || 5000);
@@ -108,23 +111,39 @@ export default function ShopClient({ initialProducts, availableCategories }) {
   const currentColor = searchParams.get("color") || "";
 
   const updateFilter = (filters) => {
-  const params = new URLSearchParams(searchParams.toString());
-  
-  Object.keys(filters).forEach((key) => {
-    if (filters[key]) {
-      params.set(key, filters[key]);
-    } else {
-      params.delete(key);
-    }
-  });
+    const params = new URLSearchParams(searchParams.toString());
 
-  // Ensure we reset to page 1 if you add pagination later
-  if (params.has("page")) params.set("page", "1");
+    Object.keys(filters).forEach((key) => {
+      if (filters[key]) {
+        params.set(key, filters[key]);
+      } else {
+        params.delete(key);
+      }
+    });
 
-  startTransition(() => {
+    // Ensure we reset to page 1 if you add pagination later
+    if (params.has("page")) params.set("page", "1");
+
+    startTransition(() => {
       router.push(`/shop?${params.toString()}`, { scroll: false });
     });
-};
+  };
+
+
+  useEffect(() => {
+    // 1. Check if we just came from a successful check
+    if (searchParams.get("check") === "success") {
+      const saved = localStorage.getItem("delivery_context");
+      if (saved) {
+        setDeliveryData(JSON.parse(saved));
+        setShowSuccessModal(true);
+
+        // 2. Clean the URL (remove ?check=success) without reloading
+        const newPath = window.location.pathname;
+        window.history.replaceState(null, "", newPath);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     document.body.style.overflow = isMobileFilterOpen ? "hidden" : "auto";
@@ -133,6 +152,15 @@ export default function ShopClient({ initialProducts, availableCategories }) {
 
   return (
     <div className="shop-root">
+      <GenericModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        type="success"
+        title="Congratulations!"
+        message={`You are eligible for ${deliveryData?.result?.time} delivery in ${deliveryData?.result?.city}.`}
+        primaryBtnText="Start Browsing"
+        onPrimaryClick={() => setShowSuccessModal(false)}
+      />
       {/* Mobile Bar and Sidebar logic remain same ... */}
       <div className="mobile-filter-bar">
         <button onClick={() => setIsMobileFilterOpen(true)} className="m-btn">
