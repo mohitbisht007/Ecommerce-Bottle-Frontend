@@ -1,44 +1,34 @@
-async function getSettings() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/storefront/settings`, {
-      next: { revalidate: 3600 }
-    });
+"use client";
+import React from "react";
 
-    // 1. CHECK: Is the response actually JSON?
-    const contentType = res.headers.get("content-type");
-    if (!res.ok || !contentType || !contentType.includes("application/json")) {
-      // If Render is sleeping or returning a 404 HTML page, just return null
-      return null; 
-    }
+export default function AnnouncementBar() {
+  const messages = [
+    "Free shipping on orders above Rs 999",
+    "7 Day easy return",
+    "10% Off On Orders Abover Rs 1999 "
+  ];
 
-    // 2. SAFE TO PARSE: We know it's JSON now
-    const json = await res.json();
-    return json.announcement?.enabled ? json.announcement : null;
-  } catch (error) {
-    // This catches network timeouts or DNS errors
-    return null;
-  }
-}
-
-export default async function AnnouncementBar() {
-  const data = await getSettings();
-
-  if (!data) return null;
+  // Render the set multiple times to fill any screen width
+  const MessageGroup = () => (
+    <div className="announcement-group">
+      {messages.map((msg, index) => (
+        <div key={index} className="announcement-item">
+          <span className="msg-text">{msg}</span>
+          <span className="msg-dot"></span>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div 
-      className="announcement-bar" 
-      style={{ 
-        backgroundColor: data.bgColor, 
-        color: data.textColor,
-        textAlign: 'center',
-        padding: '8px 0',
-        fontSize: '14px',
-        fontWeight: '500'
-      }}
-    >
-      <div className="container">
-        <p style={{ margin: 0 }}>{data.text}</p>
+    <div className="announcement-root">
+      <div className="announcement-track">
+        <div className="announcement-scroll">
+          <MessageGroup />
+          <MessageGroup />
+          <MessageGroup />
+          <MessageGroup />
+        </div>
       </div>
     </div>
   );
