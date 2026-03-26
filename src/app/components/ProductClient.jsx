@@ -6,54 +6,28 @@ import ProductInfoHeader from "../(shop)/components/productpage_components/Produ
 import ProductOptions from "../(shop)/components/productpage_components/ProductOptions";
 import ProductTabs from "../(shop)/components/productpage_components/ProductTabs";
 import PurchaseControls from "../(shop)/components/productpage_components/PurchaseControls";
-import ReviewSection from "@/app/components/ReviewSection";
-import ProductSlider from "@/app/components/ProductSlider";
+import ReviewSection from "./ReviewSection";
+import ProductSlider from "./ProductSlider";
 import { useCart } from "@/app/context/CartContext";
 
-
 export default function ProductClient({ initialProduct }) {
-  // Use initialProduct directly to avoid "Loading..." flicker
   const [product, setProduct] = useState(initialProduct);
-  const { slug } = useParams();
   const [selectedVarIdx, setSelectedVarIdx] = useState(0);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const router = useRouter()
+  const router = useRouter();
 
-  // Initialize strings based on the first variant for accurate stock checking
-  const [selectedColor, setSelectedColor] = useState(
-    initialProduct.variants[0]?.colorName || ""
-  );
-  const [selectedCapacity, setSelectedCapacity] = useState(
-    initialProduct.variants[0]?.capacity || ""
-  );
+  const [selectedColor, setSelectedColor] = useState(initialProduct.variants[0]?.colorName || "");
+  const [selectedCapacity, setSelectedCapacity] = useState(initialProduct.variants[0]?.capacity || "");
 
   const { addToCart, cartItems, setIsCartOpen } = useCart();
-
-  // Auto-Play Logic for Gallery
-  useEffect(() => {
-    if (!product) return;
-    const currentImages = product.variants[selectedVarIdx]?.images || [];
-    if (currentImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveImgIdx((prev) =>
-        prev === currentImages.length - 1 ? 0 : prev + 1
-      );
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [product, selectedVarIdx]);
 
   if (!product) return <div className="page-loader">Loading...</div>;
 
   const currentVariant = product.variants[selectedVarIdx];
-  const activeImg = currentVariant.images[activeImgIdx];
-
-  const discount = product.compareAtPrice
-    ? Math.round(
-      ((product.compareAtPrice - product.price) / product.compareAtPrice) *
-      100
-    )
+  const discount = product.compareAtPrice 
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100) 
     : 0;
 
   const handleAddToBag = () => {
@@ -66,84 +40,89 @@ export default function ProductClient({ initialProduct }) {
   };
 
   const isInBag = cartItems.some(
-    (item) =>
-      item._id === product._id &&
-      item.color === currentVariant.colorName &&
-      item.capacity === selectedCapacity
+    (item) => item._id === product._id && item.color === currentVariant.colorName && item.capacity === selectedCapacity
   );
 
-  const availableCapacities = [
-    ...new Set(product.variants.map((v) => v.capacity)),
-  ];
-
-  const activeVariant =
-    product.variants.find(
-      (v) => v.colorName === selectedColor && v.capacity === selectedCapacity
-    ) || currentVariant;
+  const activeVariant = product.variants.find(
+    (v) => v.colorName === selectedColor && v.capacity === selectedCapacity
+  ) || currentVariant;
 
   const variantStock = activeVariant.stock;
 
   return (
     <div className="product-page-root">
       <div className="product-grid-wrapper container">
-        {/* --- LEFT: GALLERY --- */}
+        
+        {/* --- LEFT COLUMN: STICKY GALLERY --- */}
+        <aside className="gallery-aside">
+          <GallerySection
+            product={product}
+            discount={discount}
+            currentVariant={currentVariant}
+            activeImgIdx={activeImgIdx}
+            setActiveImgIdx={setActiveImgIdx}
+          />
+        </aside>
 
-        <GallerySection
-          product={product}
-          discount={discount}
-          activeImg={activeImg}
-          currentVariant={currentVariant}
-          activeImgIdx={activeImgIdx}
-          setActiveImgIdx={setActiveImgIdx}
-        />
+        {/* --- RIGHT COLUMN: SCROLLABLE DETAILS --- */}
+        <main className="details-main">
+          <ProductInfoHeader
+            product={product}
+            variantStock={variantStock}
+            discount={discount}
+          />
 
-        {/* --- RIGHT: CONTENT --- */}
-        <ProductInfoHeader
-          product={product}
-          variantStock={variantStock}
-          discount={discount}
-        />
+          <ProductOptions
+            product={product}
+            currentVariant={currentVariant}
+            selectedVarIdx={selectedVarIdx}
+            setSelectedVarIdx={setSelectedVarIdx}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            selectedCapacity={selectedCapacity}
+            setSelectedCapacity={setSelectedCapacity}
+            setActiveImgIdx={setActiveImgIdx}
+          />
 
-        <ProductOptions
-          product={product}
-          currentVariant={currentVariant}
-          selectedVarIdx={selectedVarIdx}
-          setSelectedVarIdx={setSelectedVarIdx}
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-          selectedCapacity={selectedCapacity}
-          setSelectedCapacity={setSelectedCapacity}
-          setActiveImgIdx={setActiveImgIdx}
-        />
+          <PurchaseControls
+            quantity={quantity}
+            setQuantity={setQuantity}
+            handleAddToBag={handleAddToBag}
+            handleBuyNow={handleBuyNow}
+            isInBag={isInBag}
+            variantStock={variantStock}
+            setIsCartOpen={setIsCartOpen}
+          />
 
-        <PurchaseControls
-          quantity={quantity}
-          setQuantity={setQuantity}
-          handleAddToBag={handleAddToBag}
-          handleBuyNow={handleBuyNow}
-          isInBag={isInBag}
-          variantStock={variantStock}
-          setIsCartOpen={setIsCartOpen}
-        />
+          {/* Trust Indicators */}
+          <div className="trust-grid">
+            <div className="trust-item"><span>🚚</span> Free Express Shipping</div>
+            <div className="trust-item"><span>🛡️</span> 1 Year Warranty</div>
+            <div className="trust-item"><span>♻️</span> BPA Free Steel</div>
+            <div className="trust-item"><span>🔄</span> 7-Day Returns</div>
+          </div>
 
-        <ProductTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          product={product}
-        />
+          <ProductTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            product={product}
+          />
+        </main>
       </div>
 
-      <ProductSlider
-        title="Similar Styles"
-        subtitle="More from our collection"
-        fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/recommend?type=similar&category=${product.category}&productId=${product._id}`}
-      />
+      <div className="bottom-sections container">
+        <ProductSlider
+          title="Similar Styles"
+          subtitle="More from our collection"
+          fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/recommend?type=similar&category=${product.category}&productId=${product._id}`}
+        />
 
-      <ReviewSection
-        productId={product._id}
-        productRating={product.rating}
-        totalReviews={product.reviewsCount}
-      />
+        <ReviewSection
+          productId={product._id}
+          productRating={product.rating}
+          totalReviews={product.reviewsCount}
+        />
+      </div>
     </div>
   );
 }

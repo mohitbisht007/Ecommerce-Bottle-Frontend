@@ -1,87 +1,96 @@
+"use client";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function GallerySection({product, discount, activeImg, currentVariant, activeImgIdx, setActiveImgIdx}){
-    return (
-        <div className="gallery-column">
-          <div className="sticky-gallery">
-            <div className="main-display">
-              {discount > 0 && (
-                <span className="discount-tag">Save {discount}%</span>
-              )}
-              <button
-                className="share-icon"
-                onClick={() => {
-                  navigator.share
-                    ? navigator.share({
-                        title: product.title,
-                        url: window.location.href,
-                      })
-                    : navigator.clipboard.writeText(window.location.href);
-                }}
-              >
-                📤
-              </button>
+export default function GallerySection({ product, discount, currentVariant, activeImgIdx, setActiveImgIdx }) {
+  const images = currentVariant?.images || [];
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef(null);
+  const autoPlayRef = useRef(null);
 
-              {/* Next.js Image with 'fill' requires the parent to be 'position: relative'.
-          The 'hero-visual' class now handles the scaling via the CSS Fix 1 above.
-      */}
-              <Image
-                src={activeImg}
-                alt={product.title}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: "contain" }}
-                className="hero-visual fade-in"
-                key={activeImg}
-              />
+  const handleNext = useCallback(() => {
+    setActiveImgIdx((prev) => (prev + 1) % images.length);
+  }, [images.length, setActiveImgIdx]);
 
-              <div className="gallery-nav-btns">
-                <button
-                  onClick={() =>
-                    setActiveImgIdx((prev) =>
-                      prev === 0 ? currentVariant.images.length - 1 : prev - 1
-                    )
-                  }
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={() =>
-                    setActiveImgIdx((prev) =>
-                      prev === currentVariant.images.length - 1 ? 0 : prev + 1
-                    )
-                  }
-                >
-                  ›
-                </button>
-              </div>
+  const handlePrev = useCallback(() => {
+    setActiveImgIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  }, [images.length, setActiveImgIdx]);
+
+  // Auto-play Logic
+  useEffect(() => {
+    if (!isPaused && !isLightboxOpen && images.length > 1) {
+      autoPlayRef.current = setInterval(handleNext, 4000);
+    } else {
+      clearInterval(autoPlayRef.current);
+    }
+    return () => clearInterval(autoPlayRef.current);
+  }, [isPaused, isLightboxOpen, handleNext, images.length]);
+
+  // Scroll Lock for Lightbox
+  useEffect(() => {
+    document.body.style.overflow = isLightboxOpen ? "hidden" : "auto";
+  }, [isLightboxOpen]);
+
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (!touchStartX.current) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      diff > 0 ? handleNext() : handlePrev();
+    }
+    touchStartX.current = null;
+  };
+
+  return (
+    <div className="gallery-container">
+      {/* --- LIGHTBOX --- */}
+      {isLightboxOpen && (
+        <div className="lb-backdrop" onClick={() => setIsLightboxOpen(false)}>
+          <div className="lb-content" onClick={(e) => e.stopPropagation()}>
+            <button className="lb-close" onClick={() => setIsLightboxOpen(false)}><X size={28} /></button>
+            <button className="lb-arrow prev" onClick={handlePrev}><ChevronLeft size={32}/></button>
+            <div className="lb-image-box" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+              <Image src={images[activeImgIdx]} alt="Zoom" fill className="lb-img-render" priority />
             </div>
-
-            <div className="navigation-thumbnails">
-              {currentVariant.images.map((img, i) => (
-                <div
-                  key={i}
-                  className={`nav-thumb-item ${
-                    i === activeImgIdx ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImgIdx(i)}
-                  style={{
-                    position: "relative",
-                    width: "70px",
-                    height: "70px",
-                  }}
-                >
-                  <Image
-                    src={img}
-                    alt="view"
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-              ))}
-            </div>
+            <button className="lb-arrow next" onClick={handleNext}><ChevronRight size={32}/></button>
           </div>
         </div>
-    )
+      )}
+
+      {/* --- MAIN DISPLAY --- */}
+      <div 
+        className="main-viewport"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={(e) => { setIsPaused(true); onTouchStart(e); }}
+        onTouchEnd={(e) => { setIsPaused(false); onTouchEnd(e); }}
+      >
+        {discount > 0 && <span className="save-badge">Save {discount}%</span>}
+        
+        <div className="viewport-clicker" onClick={() => setIsLightboxOpen(true)}>
+          <Image src={images[activeImgIdx]} alt={product?.title} fill className="main-img-render" priority />
+        </div>
+
+        <div className="viewport-nav">
+          <button onClick={(e) => { e.stopPropagation(); handlePrev(); }}><ChevronLeft size={20} /></button>
+          <button onClick={(e) => { e.stopPropagation(); handleNext(); }}><ChevronRight size={20} /></button>
+        </div>
+      </div>
+
+      {/* --- THUMBNAILS --- */}
+      <div className="thumb-strip">
+        {images.map((img, i) => (
+          <div 
+            key={i} 
+            className={`thumb-item ${i === activeImgIdx ? "active" : ""}`}
+            onClick={() => setActiveImgIdx(i)}
+          >
+            <Image src={img} alt="thumb" fill style={{ objectFit: 'cover' }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
