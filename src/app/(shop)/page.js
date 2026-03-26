@@ -19,10 +19,10 @@ async function getHomeData() {
 
   try {
     const [bannersRes, catsRes, steelRes, newArrivalsRes] = await Promise.all([
-      fetch(`${base}/storefront/banners`, { cache: 'no-store' }),
-      fetch(`${base}/categories`, { cache: 'no-store' }),
-      fetch(`${base}/products?category=steel&limit=4`, { cache: 'no-store' }),
-      fetch(`${base}/products?sort=newest&limit=4`, { cache: 'no-store' })
+      fetch(`${base}/storefront/banners`, { next: { revalidate: 60 } }),
+      fetch(`${base}/categories`, { next: { revalidate: 60 } }),
+      fetch(`${base}/products?category=steel&limit=4`, { next: { revalidate: 60 } }),
+      fetch(`${base}/products?sort=newest&limit=4`, { next: { revalidate: 60 } })
     ]);
 
     // Check every response for JSON content-type
@@ -58,18 +58,18 @@ export default async function HomePage() {
       <CategoryTray categories={data.categories} />
 
       {/* 3. Passing pre-fetched products to avoid "loading skeletons" */}
-      <CategoryBar 
-        title="Bestselling Steel Bottles" 
-        products={data.steelBottles} 
-        query="category=steel" 
+      <CategoryBar
+        title="Bestselling Steel Bottles"
+        products={data.steelBottles}
+        query="category=steel"
       />
 
       <ComparisonBanner />
 
-      <CategoryBar 
-        title="New Arrivals" 
-        products={data.newArrivals} 
-        query="sort=newest" 
+      <CategoryBar
+        title="New Arrivals"
+        products={data.newArrivals}
+        query="sort=newest"
       />
 
       <PriceRangeTray />
