@@ -6,14 +6,33 @@ import { SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import { useTransition } from "react";
 import GenericModal from "@/app/components/GenericModal";
 
-// --- 1. FilterGroups NOW USES availableCategories ---
+const extractAvailableColors = (products) => {
+  const colorMap = new Map();
+
+  products.forEach(product => {
+    product.variants?.forEach(variant => {
+      if (variant.colorName && variant.colorCode) {
+        // Use colorName as key to avoid duplicates like "Black" appearing twice
+        colorMap.set(variant.colorName, {
+          name: variant.colorName,
+          hex: variant.colorCode
+        });
+      }
+    });
+  });
+
+  // Convert the Map values back into an array
+  return Array.from(colorMap.values());
+};
+
 const FilterGroups = ({
   currentCategory,
   updateFilter,
   priceRange,
   setPriceRange,
   currentColor,
-  currentCapacity,
+  availableColors = [],
+  currentCapacities = [],
   availableCategories, // New Prop
 }) => (
   <div className="filter-container">
@@ -63,52 +82,120 @@ const FilterGroups = ({
 
     {/* Color Palette */}
     <div className="filter-section">
-      <h3>Color Palette</h3>
-      <div className="swatch-row">
-        {[{ name: "Black", hex: "#1a1a1a" }, { name: "Blue", hex: "#2563eb" }, { name: "Silver", hex: "#cbd5e1" }, { name: "Pink", hex: "#db2777" }, { name: "Green", hex: "#16a34a" }].map((color) => (
+      <div className="filter-header">
+        <h3>Color Palette</h3>
+        {currentColor.length > 0 && (
           <button
-            key={color.name}
-            className={`color-dot ${currentColor === color.name ? "selected" : ""}`}
-            style={{ backgroundColor: color.hex }}
-            onClick={() => updateFilter({ color: currentColor === color.name ? "" : color.name })}
-          />
-        ))}
+            className="clear-sub-filter"
+            onClick={() => updateFilter({ color: "" })}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      <div className="swatch-grid-container">
+        {availableColors.map((color) => {
+          const isSelected = currentColor.includes(color.name);
+          return (
+            <label
+              key={color.name}
+              className={`swatch-wrapper ${isSelected ? "is-selected" : ""}`}
+              title={color.name}
+            >
+              <input
+                type="checkbox"
+                className="hidden-input"
+                checked={isSelected}
+                onChange={() => {
+                  const newColors = isSelected
+                    ? currentColor.filter(c => c !== color.name)
+                    : [...currentColor, color.name];
+                  updateFilter({ color: newColors.join(",") });
+                }}
+              />
+              <div className="swatch-ring">
+                <span
+                  className="swatch-dot"
+                  style={{ backgroundColor: color.hex }}
+                >
+                  {isSelected && <div className="inner-check" />}
+                </span>
+              </div>
+              <span className="swatch-label">{color.name}</span>
+            </label>
+          );
+        })}
       </div>
     </div>
 
     {/* Capacity */}
     <div className="filter-section">
-      <h3>Size / Capacity</h3>
-      <div className="capacity-grid">
-        {["500ml", "750ml", "1L", "2L"].map((size) => (
+      <div className="filter-header">
+        <h3>Size / Capacity</h3>
+        {currentCapacities.length > 0 && (
           <button
-            key={size}
-            className={`capacity-pill ${currentCapacity === size ? "active" : ""}`}
-            onClick={() => updateFilter({ capacity: currentCapacity === size ? "" : size })}
+            className="clear-sub-filter"
+            onClick={() => updateFilter({ capacity: "" })}
           >
-            {size}
+            Clear
           </button>
-        ))}
+        )}
+      </div>
+
+      <div className="capacity-selection-grid">
+        {["500ml", "750ml", "1L", "2L"].map((size) => {
+          const isSelected = currentCapacities.includes(size);
+          return (
+            <label key={size} className={`capacity-tile ${isSelected ? "is-active" : ""}`}>
+              <input
+                type="checkbox"
+                className="hidden-input"
+                checked={isSelected}
+                onChange={() => {
+                  const newSizes = isSelected
+                    ? currentCapacities.filter((s) => s !== size)
+                    : [...currentCapacities, size];
+                  updateFilter({ capacity: newSizes.join(",") });
+                }}
+              />
+              <span className="tile-content">
+                <span className="size-value">{size}</span>
+              </span>
+            </label>
+          );
+        })}
       </div>
     </div>
   </div>
 );
 
 // --- 2. MAIN COMPONENT ---
-export default function ShopClient({ initialProducts, availableCategories }) {
+export default function ShopClient({ initialProducts, availableCategories, }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
 
+  const [availableColors] = useState(() => extractAvailableColors(initialProducts));
+
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [priceRange, setPriceRange] = useState(searchParams.get("maxPrice") || 5000);
 
   const currentCategory = searchParams.get("category") || "";
   const currentCapacity = searchParams.get("capacity") || "";
+
+  const currentCapacities = searchParams.get("capacity")
+    ? searchParams.get("capacity").split(",")
+    : [];
+
   const currentSort = searchParams.get("sort") || "newest";
-  const currentColor = searchParams.get("color") || "";
+
+  const rawColor = searchParams.get("color") || "";
+  const currentColors = rawColor ? rawColor.split(",") : [];
+
+
 
   const updateFilter = (filters) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -187,19 +274,37 @@ export default function ShopClient({ initialProducts, availableCategories }) {
                 updateFilter={updateFilter}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
-                currentColor={currentColor}
-                currentCapacity={currentCapacity}
-                availableCategories={availableCategories} // Passing dynamic categories
+                currentColor={currentColors}
+                currentCapacities={currentCapacities}
+                availableCategories={availableCategories}
+                availableColors={availableColors} // Passing dynamic categories
               />
+            </div>
+
+            <div className="sidebar-mobile-footer">
+              <button className="apply-btn-mobile" onClick={() => setIsMobileFilterOpen(false)}>
+                Apply Filters
+              </button>
             </div>
           </div>
         </aside>
 
         <main className="shop-main">
           <div className="shop-header-desktop">
-            <h1 className="shop-title">{currentCategory || "All Collections"}</h1>
-            <p className="product-count">{initialProducts.length} Products Found</p>
-            {/* Sort Dropdown... */}
+            <div className="header-left">
+              <h1 className="shop-title">{currentCategory || "All Collections"}</h1>
+              <p className="product-count">{initialProducts.length} Products Found</p>
+            </div>
+
+            {/* Moved Sort inside the header for better PC alignment */}
+            <div className="sort-wrapper-desktop">
+              <span>Sort by:</span>
+              <select value={currentSort} onChange={(e) => updateFilter({ sort: e.target.value })}>
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+              </select>
+            </div>
           </div>
 
           <div className={`product-grid ${isPending ? "grid-loading" : ""}`}>

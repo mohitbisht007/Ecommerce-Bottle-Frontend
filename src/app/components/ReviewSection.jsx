@@ -43,6 +43,20 @@ export default function ReviewSection({ productId, productRating, totalReviews }
 
     useEffect(() => { fetchReviews(); }, [productId]);
 
+    useEffect(() => {
+        const savedUser = localStorage.getItem("bottle_user");
+        if (savedUser) {
+            try {
+                const user = JSON.parse(savedUser);
+                // Use username or name depending on your backend structure
+                const displayName = user.username || user.name || "";
+                setFormData(prev => ({ ...prev, name: displayName }));
+            } catch (err) {
+                console.error("Error parsing user for review", err);
+            }
+        }
+    }, [showForm]);
+
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
         setSelectedFiles((prev) => [...prev, ...files]);
@@ -125,9 +139,17 @@ export default function ReviewSection({ productId, productRating, totalReviews }
                         <label>Your Rating</label>
                         <StarRating rating={formData.rating} setRating={(val) => setFormData({ ...formData, rating: val })} interactive={true} />
                     </div>
-                    <input type="text" placeholder="Your Name" required className="review-input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                    <input
+                        type="text"
+                        placeholder="Your Name"
+                        required
+                        className="review-input"
+                        value={formData.name}
+                        readOnly={formData.name !== ""} // Only editable if not logged in
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
                     <textarea placeholder="Share your experience..." required className="review-textarea" value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} />
-                    
+
                     <div className="photo-upload-wrapper">
                         <label className="photo-label">Add Photos</label>
                         <div className="photo-grid">
@@ -156,7 +178,7 @@ export default function ReviewSection({ productId, productRating, totalReviews }
                         </div>
                         <h4 className="ri-name">{r.name} <span className="v-badge">✓ Verified Buyer</span></h4>
                         <p className="ri-comment">{r.comment}</p>
-                        
+
                         {r.images && r.images.length > 0 && (
                             <div className="ri-image-gallery">
                                 {r.images.map((img, idx) => (

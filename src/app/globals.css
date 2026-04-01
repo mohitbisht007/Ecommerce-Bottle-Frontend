@@ -27,7 +27,7 @@
 .logo-wrap { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #0f172a; }
 .logo-text { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.5px; }
 
-.header-left, .header-right { flex: 0 0 220px; display: flex; align-items: center; }
+.header-right { flex: 0 0 220px; display: flex; align-items: center; }
 .header-right { justify-content: flex-end; gap: 4px; }
 .header-center { flex: 1; display: flex; justify-content: center; }
 
@@ -1651,7 +1651,90 @@ input[type="password"]::placeholder{letter-spacing:normal}
 
 /* -------------------------------------------------------------------------------------------------------- */
 
+/* Container Logic */
+.swatch-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 16px;
+  padding: 8px 0;
+}
 
+.swatch-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.swatch-wrapper:hover {
+  transform: translateY(-2px);
+}
+
+/* The Visual Ring */
+.swatch-ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  padding: 2px;
+}
+
+.swatch-dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Selection State */
+.swatch-wrapper.is-selected .swatch-ring {
+  border-color: #0f172a; /* Dark border around selected color */
+}
+
+.swatch-wrapper.is-selected .swatch-dot {
+  transform: scale(0.85); /* Shrink dot slightly to create 'breath' space */
+}
+
+/* The Inner Checkmark (Optional but premium) */
+.inner-check {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  /* If color is very light (like White/Silver), check should be dark */
+  mix-blend-mode: difference; 
+}
+
+/* Text Label */
+.swatch-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  text-align: center;
+  max-width: 65px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+
+.swatch-wrapper.is-selected .swatch-label {
+  color: #0f172a;
+}
 
 
 /* -------------------------------------------------------------------------------------------------------- */
@@ -2933,6 +3016,93 @@ to{transform:rotate(360deg)}
 }
 
 /* FILTER COMPONENTS */
+/* Section Header */
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.clear-sub-filter {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* The Grid */
+.capacity-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+  gap: 10px;
+}
+
+/* Desktop: 2 columns is usually fine for sidebars, 
+   but you can do 1 column if your sidebar is narrow */
+@media (min-width: 1024px) {
+  .capacity-selection-grid {
+    gap: 8px;
+  }
+}
+
+/* The Tile */
+.capacity-tile {
+  cursor: pointer;
+  position: relative;
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.tile-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.size-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Hover State */
+.capacity-tile:hover .tile-content {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+/* Active/Selected State */
+.capacity-tile.is-active .tile-content {
+  background: #0f172a; /* Dark Navy/Black */
+  border-color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.capacity-tile.is-active .size-value {
+  color: #ffffff;
+}
+
+/* Click Animation */
+.capacity-tile:active {
+  transform: scale(0.96);
+}
+
 .filter-section {
   border-bottom: 1px solid #f1f1f1;
   padding-bottom: 18px;
@@ -3150,10 +3320,101 @@ to{transform:rotate(360deg)}
 .capacity-pill.active { background: #000; color: #fff; border-color: #000; }
 
 /* DESKTOP HEADER */
-.shop-header-desktop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.shop-title { font-size: 22px; font-weight: 700; }
-.sort-wrapper { display: flex; align-items: center; gap: 10px; background: #f7f7f7; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
-.sort-wrapper select { border: none; background: transparent; font-weight: 600; outline: none; }
+.shop-header-desktop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end; /* Aligns sort with the baseline of the title */
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.sort-wrapper-desktop {
+  display: none; /* Hidden by default (mobile) */
+  align-items: center;
+  gap: 12px;
+}
+.sort-wrapper-desktop span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.header-left{
+  width: 100%;
+  display: flex;
+  gap: 20px;
+}
+.shop-title { font-size: 20px; font-weight: 700; }
+.sort-wrapper-desktop select {
+  appearance: none;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 10px 35px 10px 15px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  transition: all 0.2s ease;
+}
+
+
+.sort-wrapper-desktop select:hover {
+  border-color: #94a3b8;
+}
+
+/* --- Mobile Sidebar Footer Design --- */
+.sidebar-mobile-footer {
+  display: none; /* Hidden on PC */
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  position: sticky;
+  bottom: 0;
+}
+
+.apply-btn-mobile {
+  width: 100%;
+  background: #0f172a;
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+}
+
+/* --- Responsive Breakpoints --- */
+@media (min-width: 1024px) {
+  .sort-wrapper-desktop {
+    display: flex; /* Show only on PC */
+  }
+
+  .sidebar-mobile-footer {
+    display: none !important; /* Force hide on PC */
+  }
+
+  .mobile-filter-bar {
+    display: none; /* Hide the mobile filter toggle bar on PC */
+  }
+}
+
+@media (max-width: 1023px) {
+  .sidebar-mobile-footer {
+    display: block; /* Show on Mobile */
+  }
+  
+  .shop-header-desktop {
+    display: none; /* We use the mobile-filter-bar instead on mobile */
+  }
+}
 
 /* PRODUCT GRID */
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
@@ -4221,7 +4482,7 @@ to{transform:rotate(360deg)}
   width: 100%;
   position: sticky;
   top: 0;
-  z-index: 99;
+  z-index: 999;
   background: white;
   height: 0;
   overflow: hidden;
@@ -4236,6 +4497,7 @@ to{transform:rotate(360deg)}
 .delivery-bar-container {
   height: 100%;
   position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   border-bottom: 2px solid var(--accent);
@@ -4257,6 +4519,8 @@ to{transform:rotate(360deg)}
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 5;
   gap: 15px;
 }
 
@@ -4356,7 +4620,7 @@ to{transform:rotate(360deg)}
   gap: 5px;
 }
 
-.confirm-btn, .cancel-btn {
+.confirm-btn {
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -4367,8 +4631,23 @@ to{transform:rotate(360deg)}
   cursor: pointer;
 }
 
+.cancel-btn {
+  color: #ff4d4d !important; /* Force red if it's still not showing */
+  background: rgba(0,0,0,0.05);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255,0,0,0.1);
+}
+
 .confirm-btn { background: #111; color: white; }
-.cancel-btn { background: #f3f4f6; color: #6b7280; }
+
 
 /* RESPONSIVE QUERIES */
 @media (max-width: 640px) {
