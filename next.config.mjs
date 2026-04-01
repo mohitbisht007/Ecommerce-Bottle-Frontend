@@ -15,6 +15,7 @@ const nextConfig = {
       },
     ],
   },
+  staticPageGenerationTimeout: 300,
   
   // --- ADD THESE 3 LINES TO FIX THE BUILD ERRORS ---
   typescript: { ignoreBuildErrors: true },
