@@ -8,7 +8,9 @@ import ProductTabs from "../(shop)/components/productpage_components/ProductTabs
 import PurchaseControls from "../(shop)/components/productpage_components/PurchaseControls";
 import ReviewSection from "./ReviewSection";
 import ProductSlider from "./ProductSlider";
+import ProductCustomizer from "../(shop)/components/productpage_components/ProductCustomizer";
 import { useCart } from "@/app/context/CartContext";
+import { Edit3, ShoppingBag } from "lucide-react";
 
 export default function ProductClient({ initialProduct }) {
   const [product, setProduct] = useState(initialProduct);
@@ -16,22 +18,37 @@ export default function ProductClient({ initialProduct }) {
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const router = useRouter();
+
+  // Customization States
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [selectedFont, setSelectedFont] = useState("'Inter', sans-serif");
 
   const [selectedColor, setSelectedColor] = useState(initialProduct.variants[0]?.colorName || "");
   const [selectedCapacity, setSelectedCapacity] = useState(initialProduct.variants[0]?.capacity || "");
 
   const { addToCart, cartItems, setIsCartOpen } = useCart();
 
+  useEffect(() => {
+    if (isCustomizing) {
+      setActiveImgIdx(0);
+    }
+  }, [isCustomizing]);
+
   if (!product) return <div className="page-loader">Loading...</div>;
 
   const currentVariant = product.variants[selectedVarIdx];
-  const discount = product.compareAtPrice 
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100) 
+  const discount = product.compareAtPrice
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
   const handleAddToBag = () => {
-    addToCart(product, quantity, currentVariant.colorName, selectedCapacity);
+    addToCart(
+      product,
+      quantity,
+      currentVariant.colorName,
+      selectedCapacity,
+      isCustomizing ? { text: customText, font: selectedFont } : null);
   };
 
   const handleBuyNow = () => {
@@ -49,10 +66,11 @@ export default function ProductClient({ initialProduct }) {
 
   const variantStock = activeVariant.stock;
 
+
   return (
     <div className="product-page-root">
       <div className="product-grid-wrapper container">
-        
+
         {/* --- LEFT COLUMN: STICKY GALLERY --- */}
         <aside className="gallery-aside">
           <GallerySection
@@ -61,6 +79,9 @@ export default function ProductClient({ initialProduct }) {
             currentVariant={currentVariant}
             activeImgIdx={activeImgIdx}
             setActiveImgIdx={setActiveImgIdx}
+            isCustomizing={isCustomizing}
+            customText={customText}
+            selectedFont={selectedFont}
           />
         </aside>
 
@@ -71,6 +92,7 @@ export default function ProductClient({ initialProduct }) {
             variantStock={variantStock}
             discount={discount}
           />
+
 
           <ProductOptions
             product={product}
@@ -83,6 +105,35 @@ export default function ProductClient({ initialProduct }) {
             setSelectedCapacity={setSelectedCapacity}
             setActiveImgIdx={setActiveImgIdx}
           />
+
+          {product.isCustomizable && (
+            <div className="customization-selector">
+              <button
+                className={`mode-btn ${!isCustomizing ? 'active' : ''}`}
+                onClick={() => setIsCustomizing(false)}
+              >
+                <ShoppingBag size={18} />
+                Standard
+              </button>
+              <button
+                className={`mode-btn ${isCustomizing ? 'active' : ''}`}
+                onClick={() => setIsCustomizing(true)}
+              >
+                <Edit3 size={18} />
+                Personalize (+₹{product.customizationOptions?.price || 299})
+              </button>
+            </div>
+          )}
+
+          {isCustomizing && (
+            <ProductCustomizer
+              customText={customText}
+              setCustomText={setCustomText}
+              selectedFont={selectedFont}
+              setSelectedFont={setSelectedFont}
+              maxChars={product.customizationOptions?.maxChars}
+            />
+          )}
 
           <PurchaseControls
             quantity={quantity}

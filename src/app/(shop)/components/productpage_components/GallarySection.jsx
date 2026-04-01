@@ -5,14 +5,22 @@ import { Heart, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useWishlist } from "@/app/context/WishlistContext";
 import { toast } from "react-hot-toast";
 
-export default function GallerySection({ product, discount, currentVariant, activeImgIdx, setActiveImgIdx }) {
+export default function GallerySection({
+    product,
+    discount,
+    currentVariant,
+    activeImgIdx,
+    setActiveImgIdx,
+    customText = "",
+    selectedFont = "Inter",
+    isCustomizing = false }) {
+
     const images = currentVariant?.images || [];
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const touchStartX = useRef(null);
     const autoPlayRef = useRef(null);
     const { toggleWishlist, isItemWishlisted, wishlistIds } = useWishlist()
-
 
 
     const handleNext = useCallback(() => {
@@ -53,13 +61,14 @@ export default function GallerySection({ product, discount, currentVariant, acti
 
     // Auto-play Logic
     useEffect(() => {
-        if (!isPaused && !isLightboxOpen && images.length > 1) {
-            autoPlayRef.current = setInterval(handleNext, 4000);
-        } else {
-            clearInterval(autoPlayRef.current);
-        }
-        return () => clearInterval(autoPlayRef.current);
-    }, [isPaused, isLightboxOpen, handleNext, images.length]);
+    // We add !isCustomizing to the condition
+    if (!isPaused && !isLightboxOpen && images.length > 1 && !isCustomizing) {
+        autoPlayRef.current = setInterval(handleNext, 4000);
+    } else {
+        clearInterval(autoPlayRef.current);
+    }
+    return () => clearInterval(autoPlayRef.current);
+}, [isPaused, isLightboxOpen, handleNext, images.length, isCustomizing]);
 
     // Scroll Lock for Lightbox
     useEffect(() => {
@@ -130,15 +139,33 @@ export default function GallerySection({ product, discount, currentVariant, acti
                 </div>
 
 
-                <div className="viewport-clicker" onClick={() => setIsLightboxOpen(true)}>
+                <div className="viewport-clicker" onClick={() => !isCustomizing && setIsLightboxOpen(true)}>
                     <Image src={images[activeImgIdx]} alt={product?.title} fill className="main-img-render" priority />
+                    
+                    {/* --- LIVE ENGRAVING LAYER --- */}
+                    {isCustomizing && customText && (
+                        <div 
+                          className="engraving-canvas"
+                          style={{
+                            top: product.customizationOptions?.textPosition?.top || "55%",
+                            left: product.customizationOptions?.textPosition?.left || "50%",
+                            fontFamily: selectedFont
+                          }}
+                        >
+                            <span className="live-text">{customText}</span>
+                        </div>
+                    )}
                 </div>
 
-                <div className="viewport-nav">
-                    <button onClick={(e) => { e.stopPropagation(); handlePrev(); }}><ChevronLeft size={20} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleNext(); }}><ChevronRight size={20} /></button>
-                </div>
+                {/* Hide Nav if Customizing for better focus */}
+                {!isCustomizing && (
+                    <div className="viewport-nav">
+                        <button onClick={(e) => { e.stopPropagation(); handlePrev(); }}><ChevronLeft size={20} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleNext(); }}><ChevronRight size={20} /></button>
+                    </div>
+                )}
             </div>
+
 
             {/* --- THUMBNAILS --- */}
             <div className="thumb-strip">
