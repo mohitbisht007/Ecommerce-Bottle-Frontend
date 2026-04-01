@@ -3341,7 +3341,6 @@ to{transform:rotate(360deg)}
   letter-spacing: 0.05em;
 }
 .header-left{
-  width: 100%;
   display: flex;
   gap: 20px;
 }
