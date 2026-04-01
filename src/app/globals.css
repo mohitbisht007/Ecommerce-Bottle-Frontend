@@ -1826,7 +1826,7 @@ input[type="password"]::placeholder{letter-spacing:normal}
 /* --- THUMBNAILS --- */
 .thumb-strip {
   display: flex;
-  gap: 12px;
+  gap: 5px;
   margin-top: 20px;
   overflow-x: auto;
   padding-bottom: 5px;
