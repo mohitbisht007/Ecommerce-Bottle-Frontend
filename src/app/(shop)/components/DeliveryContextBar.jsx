@@ -15,6 +15,28 @@ export default function DeliveryContextBar() {
     else setContext(null);
   };
 
+  const getDynamicStatus = (dist) => {
+    const hour = new Date().getHours();
+    const isWorkingHours = hour >= 10 && hour < 18; // 10 AM to 6 PM
+
+    if (dist <= 10) {
+      if (isWorkingHours) {
+        return { time: '90 MINS', color: '#ec4899', type: 'EXPRESS' };
+      } else if (hour >= 18) {
+        return { time: 'TOMORROW', color: '#ec4899', type: 'EXPRESS' };
+      } else {
+        return { time: 'TODAY', color: '#ec4899', type: 'EXPRESS' };
+      }
+    } else if (dist <= 50) {
+      // NCR Logic: Usually same day if ordered early, else tomorrow
+      return hour < 14 
+        ? { time: 'SAME DAY', color: '#3b82f6', type: 'NCR' } 
+        : { time: 'TOMORROW', color: '#3b82f6', type: 'NCR' };
+    } else {
+      return { time: '2-4 DAYS', color: '#64748b', type: 'NATIONAL' };
+    }
+  };
+
   useEffect(() => {
     loadContext();
     window.addEventListener("storage", loadContext);
@@ -60,9 +82,7 @@ export default function DeliveryContextBar() {
   };
 
   const saveAndExit = (pincode, dist, city, coords) => {
-    let status = dist <= 10 ? { time: '90 MINS', color: '#ec4899', type: 'EXPRESS' } :
-      dist <= 50 ? { time: 'SAME DAY', color: '#3b82f6', type: 'NCR' } :
-        { time: '2-4 DAYS', color: '#64748b', type: 'NATIONAL' };
+    const status = getDynamicStatus(dist); // Use the helper here
 
     const updated = {
       pincode,

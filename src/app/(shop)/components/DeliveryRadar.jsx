@@ -6,7 +6,7 @@ import { MapPin, Zap, Truck, Globe, Loader2, Navigation } from "lucide-react";
 
 export default function DeliveryRadar() {
   const router = useRouter();
-  const [pincode, setPincode] = useState("");
+  const [pincode, setPincode] = useState(""); 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -55,11 +55,28 @@ export default function DeliveryRadar() {
   };
 
   const processResult = (distance, city, coords) => {
+    const hour = new Date().getHours();
+    const isWorkingHours = hour >= 10 && hour < 18;
     let status = {};
+
     if (distance <= 10) {
-      status = { type: 'EXPRESS', time: '90 MINS', desc: 'Priority Crafting', icon: "zap", color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
+      if (isWorkingHours) {
+        status = { type: 'EXPRESS', time: '90 MINS', desc: 'Priority Crafting', icon: "zap", color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
+      } else if (hour >= 18) {
+        status = { type: 'EXPRESS', time: 'TOMORROW', desc: 'First Slot Dispatch', icon: "zap", color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
+      } else {
+        status = { type: 'EXPRESS', time: 'TODAY', desc: 'Morning Dispatch', icon: "zap", color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
+      }
     } else if (distance <= 50) {
-      status = { type: 'NCR', time: 'SAME DAY', desc: 'City Wide Sprint', icon: "truck", color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' };
+      const isEarlyNCR = hour < 14;
+      status = { 
+        type: 'NCR', 
+        time: isEarlyNCR ? 'SAME DAY' : 'TOMORROW', 
+        desc: isEarlyNCR ? 'City Wide Sprint' : 'Next Day Delivery', 
+        icon: "truck", 
+        color: '#3b82f6', 
+        bg: 'rgba(59, 130, 246, 0.1)' 
+      };
     } else {
       status = { type: 'NATIONAL', time: '2-4 DAYS', desc: 'Premium Freight', icon: "globe", color: '#64748b', bg: 'rgba(100, 116, 139, 0.1)' };
     }

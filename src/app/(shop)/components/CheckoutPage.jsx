@@ -5,34 +5,29 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { calculateDistance } from "@/app/helpers/deliveryLogic";
+import { MapPin } from "lucide-react";
+
 import {
-  Check,
-  ShoppingBag,
-  Plus,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Shield,
-  Lock,
-  Truck,
-  CreditCard,
+  X, Check, ShoppingBag, Plus, Trash2, ChevronLeft,
+  ChevronRight, Loader2, Shield, Lock, Truck
 } from "lucide-react";
 
 export default function CheckoutPage() {
   const [hasMounted, setHasMounted] = useState(false);
-  const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } =
-    useCart();
+  const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const router = useRouter();
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailInput, setEmailInput] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+
+  // Holds guest address locally until the "Pay" button is clicked
+  const [temporaryGuestAddress, setTemporaryGuestAddress] = useState(null);
+
+  const [userEmail, setUserEmail] = useState(""); // This tracks the email for the whole session
   const [newAddr, setNewAddr] = useState({
     fullName: "",
     phone: "",
@@ -42,6 +37,138 @@ export default function CheckoutPage() {
     state: "",
   });
 
+  const [deliveryContext, setDeliveryContext] = useState(null);
+  const syncDeliveryContext = () => {
+    const saved = localStorage.getItem("delivery_context");
+    if (saved) {
+      setDeliveryContext(JSON.parse(saved));
+    }
+  };
+
+  const [isEditingSidebar, setIsEditingSidebar] = useState(false);
+  const [sidebarPin, setSidebarPin] = useState("");
+  const [sidebarLoading, setSidebarLoading] = useState(false);
+
+  const saveAndSync = (pincode, dist, city, coords) => {
+    const hour = new Date().getHours();
+    let status = {};
+
+    if (dist <= 10) {
+      const timeLabel = (hour >= 10 && hour < 18) ? '90 MINS' : (hour >= 18 ? 'TOMORROW' : 'TODAY');
+      status = { time: timeLabel, color: '#ec4899', type: 'EXPRESS' }; // Added 'type'
+    } else if (dist <= 50) {
+      const timeLabel = hour < 14 ? 'SAME DAY' : 'TOMORROW';
+      status = { time: timeLabel, color: '#3b82f6', type: 'NCR' }; // Added 'type'
+    } else {
+      status = { time: '2-4 DAYS', color: '#64748b', type: 'NATIONAL' }; // Added 'type'
+    }
+
+    const updated = { pincode, result: { ...status, city, distance: dist.toFixed(1) }, coords };
+
+    localStorage.setItem("delivery_context", JSON.stringify(updated));
+    window.dispatchEvent(new Event("delivery_context_updated"));
+    setDeliveryContext(updated);
+  };
+
+  // This function mirrors your DeliveryContextBar logic to keep everything in sync
+  const handleSidebarPinUpdate = async (e) => {
+    e.preventDefault();
+    if (sidebarPin.length < 6) return;
+    setSidebarLoading(true);
+
+    try {
+      const res = await fetch(`https://api.zippopotam.us/in/${sidebarPin}`);
+
+      if (!res.ok) throw new Error("Pincode API failed");
+
+      const data = await res.json();
+
+      if (data && data.places && data.places.length > 0) {
+        const { latitude, longitude, "place name": city } = data.places[0];
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+
+        // This requires calculateDistance to be imported
+        const dist = calculateDistance(lat, lng);
+
+        saveAndSync(sidebarPin, dist, city, [lat, lng]);
+      } else {
+        throw new Error("Invalid format from API");
+      }
+    } catch (err) {
+      console.warn("Using fallback logic for pincode:", sidebarPin);
+
+      // Mirroring your DeliveryContextBar's fallback logic
+      const isDelhi = sidebarPin.startsWith("11");
+      const demoDistance = isDelhi ? 8.4 : 45.2;
+      const demoCity = isDelhi ? "South Delhi" : "NCR Region";
+      const demoCoords = isDelhi ? [28.6139, 77.2090] : [28.4595, 77.0266];
+
+      saveAndSync(sidebarPin, demoDistance, demoCity, demoCoords);
+    } finally {
+      setSidebarLoading(false);
+      setIsEditingSidebar(false);
+    }
+  };
+
+  useEffect(() => {
+    syncDeliveryContext();
+    // Listen for updates from the DeliveryContextBar
+    window.addEventListener("delivery_context_updated", syncDeliveryContext);
+    return () => window.removeEventListener("delivery_context_updated", syncDeliveryContext);
+  }, []);
+
+  // 2. Format the Delivery Date dynamically
+  const getDeliveryEstimate = () => {
+    if (!deliveryContext) return "Enter Pincode for estimate";
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const result = deliveryContext.result;
+
+    // Safety check for distance and type
+    const distance = parseFloat(result.distance);
+    const isExpress = result.type === 'EXPRESS' || distance <= 10;
+    const isNCR = result.type === 'NCR' || (distance > 10 && distance <= 50);
+
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+    const dateOptions = { day: 'numeric', month: 'short' };
+
+    // --- 1. EXPRESS LOGIC (South Delhi / < 10km) ---
+    if (isExpress) {
+      // If it's after 6 PM (18:00)
+      if (currentHour >= 18) {
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60000);
+        return `Expected by: Tomorrow, ${tomorrow.toLocaleDateString('en-IN', dateOptions)} (10:30 AM - 12:00 PM)`;
+      }
+      // If it's before 10 AM
+      if (currentHour < 10) {
+        return "Expected by: Today, approx. 11:30 AM";
+      }
+      // During 10 AM - 6 PM
+      const arrivalTime = new Date(now.getTime() + 90 * 60000);
+      return `Expected by: Today, approx. ${arrivalTime.toLocaleTimeString('en-IN', timeOptions)}`;
+    }
+
+    // --- 2. NCR LOGIC (10km - 50km) ---
+    if (isNCR) {
+      if (currentHour >= 14) {
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60000);
+        return `Expected by: ${tomorrow.toLocaleDateString('en-IN', dateOptions)} Evening`;
+      }
+      const arrivalTime = new Date(now.getTime() + 6 * 60 * 60000);
+      return `Expected by: Today, before ${arrivalTime.toLocaleTimeString('en-IN', timeOptions)}`;
+    }
+
+    // --- 3. NATIONAL LOGIC (Default) ---
+    const deliveryDate = new Date(now.getTime() + 3 * 24 * 60 * 60000);
+    return `Expected by: ${deliveryDate.toLocaleDateString('en-IN', dateOptions)}`;
+  };
+
+  const gstRate = 0.18;
+  const finalTotal = cartTotal; // This is the 999 user sees
+  const basePrice = Math.round(finalTotal / (1 + gstRate));
+  const gstAmount = finalTotal - basePrice;
 
 
   useEffect(() => {
@@ -52,16 +179,18 @@ export default function CheckoutPage() {
     const storedUser = JSON.parse(localStorage.getItem("bottle_user") || "{}");
 
     if (token) {
-      // If logged in, set email and fetch addresses immediately
       setUserEmail(storedUser.email || "");
       fetchAddresses(token);
-      setShowEmailModal(false);
-    } else {
-      setShowEmailModal(true);
     }
   }, []);
 
-  if (!hasMounted) return null;
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `JWT ${token}`;
+    return headers;
+  };
 
   const handleIdentify = async (e) => {
     e.preventDefault();
@@ -74,13 +203,13 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
 
-      setUserEmail(emailInput); // Store for the address form
+      setUserEmail(emailInput); // Set global email from modal
       if (data.exists) {
         setSavedAddresses(data.addresses || []);
         setSelectedAddressId(data.addresses[0]?._id);
         setIsAddingAddress(false);
       } else {
-        setIsAddingAddress(true); // Non-existing user must add address
+        setIsAddingAddress(true);
       }
       setShowEmailModal(false);
     } catch (err) {
@@ -90,14 +219,12 @@ export default function CheckoutPage() {
     }
   };
 
-
-  async function fetchAddresses (token) {
+  async function fetchAddresses(token) {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
         headers: { Authorization: `JWT ${token}` },
       });
       const data = await res.json();
-      console.log(data)
       const userAddresses = data.user?.addresses || [];
       setSavedAddresses(userAddresses);
       if (userAddresses.length > 0) {
@@ -107,132 +234,163 @@ export default function CheckoutPage() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  console.log(savedAddresses)
+  useEffect(() => {
+  if (!isAddingAddress && selectedAddressId && savedAddresses.length > 0) {
+    const selected = savedAddresses.find(a => a._id === selectedAddressId);
+
+    if (selected && selected.zip && deliveryContext?.pincode !== selected.zip) {
+      const pin = selected.zip;
+      
+      // Check if it's a known Express/NCR zone by pincode prefix
+      // Delhi (11), Noida (201), Gurgaon (122), Ghaziabad (201)
+      const isExpressZone = pin.startsWith("11");
+      const isNCRZone = pin.startsWith("201") || pin.startsWith("122") || pin.startsWith("121");
+
+      if (isExpressZone) {
+        saveAndSync(pin, 8.4, selected.city || "Delhi", [28.6, 77.2]);
+      } else if (isNCRZone) {
+        saveAndSync(pin, 35.0, selected.city || "NCR", [28.4, 77.0]);
+      } else {
+        // NATIONAL: High distance to trigger the 2-4 days logic (e.g., 500km)
+        saveAndSync(pin, 500.0, selected.city, [0, 0]);
+      }
+    }
+  }
+}, [selectedAddressId, isAddingAddress, savedAddresses]);
 
   const handlePincodeChange = async (e) => {
-    const pin = e.target.value;
+    const pin = e.target.value.replace(/\D/g, ""); // Allow only numbers
     setNewAddr({ ...newAddr, pincode: pin });
 
     if (pin.length === 6) {
+      setSidebarLoading(true); // Show loading in sidebar
       try {
-        // Using the reliable India Post API (via api.postalpincode.in)
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const res = await fetch(`https://api.zippopotam.us/in/${pin}`);
         const data = await res.json();
 
-        if (data[0].Status === "Success") {
-          const postOffice = data[0].PostOffice[0];
-          setNewAddr((prev) => ({
+        if (data && data.places && data.places.length > 0) {
+          const { latitude, longitude, "place name": city } = data.places[0];
+          const lat = parseFloat(latitude);
+          const lng = parseFloat(longitude);
+          const dist = calculateDistance(lat, lng);
+
+          // Update city/state in form
+          setNewAddr(prev => ({
             ...prev,
-            city: postOffice.District,
-            state: postOffice.State,
-            pincode: pin,
+            city: city,
+            state: data.places[0].state || prev.state,
           }));
+
+          // CRITICAL: Sync with global context so sidebar updates
+          saveAndSync(pin, dist, city, [lat, lng]);
         }
       } catch (err) {
-        console.error("Pincode fetch failed", err);
+        // Fallback logic
+        const isDelhi = pin.startsWith("11");
+        saveAndSync(pin, isDelhi ? 8.4 : 45.2, isDelhi ? "South Delhi" : "National", [0, 0]);
+      } finally {
+        setSidebarLoading(false);
       }
     }
   };
 
-  // --- FIXED: Function now fully defined ---
-  const handleAddNewAddress = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const token = localStorage.getItem("token");
+  const handleContinueToPayment = (e) => {
+    if (e) e.preventDefault();
 
-    const payload = {
-      name: newAddr.fullName,
-      number: newAddr.phone,
-      street: newAddr.addressLine,
-      city: newAddr.city,
-      zip: newAddr.pincode,
-      state: newAddr.state,
-    };
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/add-address`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `JWT ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (res.ok) {
-        await fetchAddresses(token);
-        setIsAddingAddress(false);
-      } else {
-        const errData = await res.json();
-        alert(errData.message || "Failed to save address");
-      }
-    } catch (err) {
-      alert("An error occurred while saving the address.");
-    } finally {
-      setLoading(false);
+    if (isAddingAddress) {
+      const manualAddress = {
+        name: newAddr.fullName,
+        number: newAddr.phone,
+        street: newAddr.addressLine,
+        city: newAddr.city,
+        zip: newAddr.pincode,
+        state: newAddr.state,
+      };
+      setTemporaryGuestAddress(manualAddress);
+      setStep(3);
+    } else {
+      if (selectedAddressId) setStep(3);
+      else alert("Please select or add an address");
     }
   };
 
   const handleRazorpay = async () => {
     setLoading(true);
-    const token = localStorage.getItem("token");
-    const address = savedAddresses.find((a) => a._id === selectedAddressId);
+
+    // 1. Map the address correctly
+    let addressToSend;
+    if (isAddingAddress) {
+      // Convert Frontend names (fullName, pincode) to Schema names (name, zip)
+      addressToSend = {
+        name: newAddr.fullName,
+        number: newAddr.phone,
+        street: newAddr.addressLine,
+        city: newAddr.city,
+        zip: newAddr.pincode,
+        state: newAddr.state,
+      };
+    } else {
+      addressToSend = savedAddresses.find((a) => a._id === selectedAddressId);
+    }
+
+    // 2. Validate before sending
+    if (!addressToSend || !userEmail) {
+      alert("Please complete address and email details.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/checkout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `JWT ${token}`,
-          },
-          body: JSON.stringify({ items: cartItems, address }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/checkout`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          items: cartItems,
+          address: addressToSend, // Now contains 'name' and 'zip'
+          email: userEmail
+        }),
+      });
+
       const orderData = await res.json();
+      if (!res.ok) throw new Error(orderData.message || "Checkout failed");
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: "INR",
         name: "BouncyBucket",
-        description: "Order Checkout",
         order_id: orderData.orderId,
         handler: async (resp) => {
-          const vRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/orders/verify`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `JWT ${token}`,
-              },
-              body: JSON.stringify(resp),
-            }
-          );
-
+          const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/verify`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(resp),
+          });
           if (vRes.ok) {
             clearCart();
-            router.push("/success");
+            router.push(`/success?orderId=${resp.razorpay_order_id}`);
           }
         },
-        prefill: { contact: address.number, name: address.name },
+        prefill: {
+          contact: addressToSend.number,
+          name: addressToSend.name,
+          email: userEmail
+        },
         theme: { color: "#000000" },
       };
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (e) {
-      console.error("Payment failed", e);
+      alert(e.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!hasMounted) return null;
 
   if (cartItems.length === 0)
     return (
@@ -249,71 +407,6 @@ export default function CheckoutPage() {
   return (
     <div className="checkout-page-root">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-      {showEmailModal && (
-        <div className="modal-overlay">
-          <div className="id-modal animate-up">
-            {/* 1. TOP CLOSE BUTTON */}
-            <button
-              className="modal-close-btn"
-              onClick={() => setShowEmailModal(false)}
-              aria-label="Close modal"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="modal-header">
-              <div className="brand-dot"></div>
-              <h2>{"Welcome to Checkout"}</h2>
-              <p>
-                {
-                  "Enter your email to retrieve your details or proceed as a guest."
-                }
-              </p>
-            </div>
-
-            <form onSubmit={handleIdentify}>
-              <div className="input-group">
-                <label>{"Email Address"}</label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <button type="submit" className="btn-action" disabled={loading}>
-                {loading ? (
-                  <Loader2 className="spin" />
-                ) : (
-                  "Continue to Shipping"
-                )}
-              </button>
-            </form>
-
-            {/* 2. GUEST REDIRECT OPTION */}
-            <div className="modal-alt-action">
-              <button
-                type="button"
-                className="guest-link"
-                onClick={() => {
-                  setIsAddingAddress(true);
-                  setShowEmailModal(false);
-                }}
-              >
-                {"I'll enter my details manually"}
-              </button>
-            </div>
-
-            <div className="modal-footer">
-              <Shield size={14} />
-              <span>{"Secure Checkout"}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       <nav className="checkout-nav">
         <div className="container nav-wrap">
@@ -327,6 +420,7 @@ export default function CheckoutPage() {
       </nav>
 
       <main className="container checkout-container">
+        {/* Progress Bar logic here */}
         <div className="progress-bar-wrap">
           {[1, 2, 3].map((num) => (
             <div
@@ -391,184 +485,71 @@ export default function CheckoutPage() {
                 </button>
               </div>
             )}
+
             {step === 2 && (
               <div className="card-glass animate-up">
                 <div className="header-with-back">
-                  <button
-                    onClick={() =>
-                      isAddingAddress ? setIsAddingAddress(false) : setStep(1)
-                    }
-                  >
-                    <ChevronLeft />
-                  </button>
-                  <h2 className="card-title">
-                    {isAddingAddress ? "New Address" : "Shipping Details"}
-                  </h2>
+                  <button onClick={() => isAddingAddress ? setIsAddingAddress(false) : setStep(1)}><ChevronLeft /></button>
+                  <h2 className="card-title">Shipping Information</h2>
                 </div>
 
                 {!isAddingAddress ? (
                   <div className="address-section">
                     <div className="address-grid">
-                      <div
-                        className="address-card add-btn"
-                        onClick={() => setIsAddingAddress(true)}
-                      >
-                        <Plus size={32} />
-                        <p>{"New Address"}</p>
+                      <div className="address-card add-btn" onClick={() => setIsAddingAddress(true)}>
+                        <Plus size={32} /><p>Add New Address</p>
                       </div>
                       {savedAddresses.map((addr) => (
-                        <div
-                          key={addr._id}
-                          className={`address-card ${selectedAddressId === addr._id ? "selected" : ""
-                            }`}
-                          onClick={() => setSelectedAddressId(addr._id)}
-                        >
-                          <div className="radio-circle"></div>
+                        <div key={addr._id} className={`address-card ${selectedAddressId === addr._id ? "selected" : ""}`} onClick={() => setSelectedAddressId(addr._id)}>
                           <strong>{addr.name}</strong>
-                          <p>
-                            {addr.street}, {addr.city}, {addr.state}
-                          </p>
-                          <small>{addr.number}</small>
+                          <p>{addr.street}, {addr.city}</p>
                         </div>
                       ))}
                     </div>
-                    <button
-                      className="btn-action"
-                      onClick={() => setStep(3)}
-                      disabled={!selectedAddressId}
-                    >
-                      {"Continue to Payment"}
-                    </button>
+                    <button className="btn-action" onClick={handleContinueToPayment} disabled={!selectedAddressId}>Continue to Payment</button>
                   </div>
                 ) : (
-                  <form
-                    className="modern-form animate-up"
-                    onSubmit={handleAddNewAddress}
-                  >
-                    <div className="form-section-label">Contact Details</div>
+                  <form className="modern-form animate-up" onSubmit={handleContinueToPayment}>
                     <div className="input-row">
                       <div className="input-group">
                         <label>Full Name*</label>
-                        <input
-                          type="text"
-                          placeholder="Receiver's name"
-                          onChange={(e) =>
-                            setNewAddr({ ...newAddr, fullName: e.target.value })
-                          }
-                          required
-                        />
+                        <input type="text" onChange={(e) => setNewAddr({ ...newAddr, fullName: e.target.value })} required />
                       </div>
+                      {/* ADDED EMAIL FIELD HERE */}
                       <div className="input-group">
                         <label>Email Address*</label>
                         <input
                           type="email"
                           value={userEmail}
-                          readOnly // Prefilled and locked
-                          className="input-readonly"
-                        />
-                      </div>
-                      <div className="input-group">
-                        <label>Phone Number*</label>
-                        <input
-                          type="tel"
-                          placeholder="10-digit mobile number"
-                          onChange={(e) =>
-                            setNewAddr({ ...newAddr, phone: e.target.value })
-                          }
+                          onChange={(e) => setUserEmail(e.target.value)}
                           required
                         />
                       </div>
                     </div>
-
-                    <div className="form-section-label">Address Details</div>
-                    <div className="input-group">
-                      <label>Street Address*</label>
-                      <input
-                        type="text"
-                        placeholder="Flat, House no., Building, Company, Apartment"
-                        onChange={(e) =>
-                          setNewAddr({
-                            ...newAddr,
-                            addressLine: e.target.value,
-                          })
-                        }
-                        required
-                      />
+                    <div className="input-row">
+                      <div className="input-group">
+                        <label>Phone Number*</label>
+                        <input type="tel" onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })} required />
+                      </div>
+                      <div className="input-group">
+                        <label>Street Address*</label>
+                        <input type="text" onChange={(e) => setNewAddr({ ...newAddr, addressLine: e.target.value })} required />
+                      </div>
                     </div>
-
-                    <div className="input-group">
-                      <label>Landmark (Optional)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Near Apollo Hospital"
-                        onChange={(e) =>
-                          setNewAddr({ ...newAddr, landmark: e.target.value })
-                        }
-                      />
-                    </div>
-
                     <div className="input-row triplet">
                       <div className="input-group">
                         <label>Pincode*</label>
-                        <input
-                          type="text"
-                          maxLength="6"
-                          placeholder="6-digit PIN"
-                          value={newAddr.pincode}
-                          onChange={handlePincodeChange}
-                          required
-                        />
+                        <input type="text" maxLength="6" value={newAddr.pincode} onChange={handlePincodeChange} required />
                       </div>
-                      <div className="input-group">
-                        <label>City*</label>
-                        <input
-                          type="text"
-                          placeholder="City"
-                          value={newAddr.city}
-                          onChange={(e) =>
-                            setNewAddr({ ...newAddr, city: e.target.value })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="input-group">
-                        <label>State*</label>
-                        <input
-                          type="text"
-                          placeholder="State"
-                          value={newAddr.state}
-                          onChange={(e) =>
-                            setNewAddr({ ...newAddr, state: e.target.value })
-                          }
-                          required
-                        />
-                      </div>
+                      <div className="input-group"><label>City*</label><input type="text" value={newAddr.city} readOnly /></div>
+                      <div className="input-group"><label>State*</label><input type="text" value={newAddr.state} readOnly /></div>
                     </div>
-
-                    <div className="form-footer-actions">
-                      <button
-                        type="button"
-                        className="btn-secondary-outline"
-                        onClick={() => setIsAddingAddress(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn-action"
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <Loader2 className="spin" />
-                        ) : (
-                          "Save & Deliver Here"
-                        )}
-                      </button>
-                    </div>
+                    <button type="submit" className="btn-action">Proceed to Payment</button>
                   </form>
                 )}
               </div>
             )}
+
             {step === 3 && (
               <div className="card-glass animate-up payment-card">
                 <div className="header-with-back">
@@ -655,45 +636,158 @@ export default function CheckoutPage() {
             )}
           </div>
 
+          {/* Sidebar logic */}
+
           <aside className="summary-sidebar">
-            <div className="sidebar-sticky">
-              <h3>{"Order Summary"}</h3>
+            <div className="sidebar-sticky animate-up">
+              <h3 className="sidebar-header">Order Summary</h3>
+
+              {/* MINI PRODUCT LIST */}
               <div className="mini-products">
                 {cartItems.map((item, idx) => (
                   <div key={idx} className="mini-item">
                     <div className="thumb">
                       <Image
                         src={item.variants?.[0]?.images?.[0] || item.image}
-                        width={50}
-                        height={50}
-                        alt=""
+                        width={60}
+                        height={60}
+                        alt={item.title}
+                        className="rounded-img"
                       />
+                      <span className="qty-badge">{item.quantity}</span>
                     </div>
                     <div className="txt">
-                      <p>{item.title}</p>
-                      <span>Qty: {item.quantity}</span>
+                      <p className="item-name">{item.title}</p>
+                      <span className="item-variant">{item.color} / {item.capacity}</span>
                     </div>
                     <div className="pr">₹{item.price * item.quantity}</div>
                   </div>
                 ))}
               </div>
-              <div className="pricing">
+
+              {/* PRICING SECTION */}
+              <div className="pricing-box">
                 <div className="line">
-                  <span>{"Subtotal"}</span>
-                  <span>₹{cartTotal}</span>
+                  <span>Price (Excl. GST)</span>
+                  <span>₹{basePrice}</span>
                 </div>
+
                 <div className="line">
-                  <span>{"Shipping"}</span>
-                  <span className="green">{"FREE"}</span>
+                  <span>Estimated GST (18%)</span>
+                  <span>₹{gstAmount}</span>
                 </div>
+
+                <div className="line">
+                  <span>Shipping</span>
+                  <span className="green">FREE</span>
+                </div>
+
+                <div className="total-divider"></div>
+
                 <div className="line total">
-                  <span>{"Total Amount"}</span>
-                  <span>₹{cartTotal}</span>
+                  <span>Total Amount</span>
+                  <span>₹{finalTotal}</span>
+                </div>
+                <p className="inclusive-tax-tag">Inclusive of all taxes</p>
+              </div>
+
+              {/* DYNAMIC DELIVERY INFO */}
+              <div className="delivery-status-box">
+                {sidebarLoading ? (
+                  <div className="sidebar-loader-internal">
+                    <Loader2 className="spin" size={20} color="#ec4899" />
+                    <span>Recalculating route...</span>
+                  </div>
+                ) : !isEditingSidebar ? (
+                  <div className="flex-row">
+                    <div
+                      className="icon-circle"
+                      style={{
+                        backgroundColor: deliveryContext ? `${deliveryContext.result.color}15` : '#f1f5f9'
+                      }}
+                    >
+                      <Truck
+                        size={18}
+                        style={{ color: deliveryContext ? deliveryContext.result.color : '#94a3b8' }}
+                      />
+                    </div>
+
+                    <div className="delivery-info">
+                      <p className="delivery-title">
+                        {deliveryContext
+                          ? `${deliveryContext.result.time} Delivery`
+                          : "Delivery Estimate"}
+                      </p>
+
+                      <p className="delivery-location">
+                        {deliveryContext
+                          ? `To ${deliveryContext.pincode} (${deliveryContext.result.city})`
+                          : "Set location for speed"}
+                      </p>
+
+                      <button
+                        className="change-pin-link"
+                        onClick={() => {
+                          setIsEditingSidebar(true);
+                          setSidebarPin(deliveryContext?.pincode || "");
+                        }}
+                      >
+                        {deliveryContext ? "Change Pincode" : "Enter Pincode"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* INLINE EDIT FORM */
+                  <form onSubmit={handleSidebarPinUpdate} className="sidebar-pin-form animate-in">
+                    <div className="input-wrap">
+                      <MapPin size={14} className="pin-icon" />
+                      <input
+                        autoFocus
+                        type="text"
+                        maxLength={6}
+                        value={sidebarPin}
+                        onChange={(e) => setSidebarPin(e.target.value.replace(/\D/g, ""))}
+                        placeholder="Pincode"
+                      />
+                    </div>
+                    <div className="form-btns">
+                      <button type="submit" className="confirm-tick">
+                        <Check size={18} color="#22c55e" />
+                      </button>
+                      <button type="button" className="cancel-x" onClick={() => setIsEditingSidebar(false)}>
+                        <X size={18} color="#ef4444" />
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* DYNAMIC ETA BADGE */}
+                {deliveryContext && !isEditingSidebar && !sidebarLoading && (
+                  <div
+                    className="eta-badge animate-up"
+                    style={{
+                      color: deliveryContext.result.color,
+                      borderLeft: `3px solid ${deliveryContext.result.color}`,
+                      backgroundColor: `${deliveryContext.result.color}08`
+                    }}
+                  >
+                    {getDeliveryEstimate()}
+                  </div>
+                )}
+              </div>
+
+              {/* TRUST FEATURES */}
+              <div className="trust-stack">
+                <div className="info-line">
+                  <Shield size={14} /> <span>100% Secure Checkout</span>
+                </div>
+                <div className="info-line">
+                  <Truck size={14} /> <span>Fast Dispatch from Noida</span>
                 </div>
               </div>
-              <div className="guarantee">
-                <Shield size={16} />{" "}
-                <p>{"Guaranteed safe & secure checkout"}</p>
+
+              <div className="urgency-tag">
+                🔥 High demand: 4 people looking at these items
               </div>
             </div>
           </aside>

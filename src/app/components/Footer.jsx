@@ -90,8 +90,28 @@ export default function Footer() {
 
         {/* SECTION 4: NEWSLETTER */}
         <div className="footer-newsletter">
-          <h4>The Guest List</h4>
+
+          {/* NEW: CONTACT DETAILS */}
+          <div className="footer-contact-details">
+            <h4>Get in Touch</h4>
+
+            <p className="footer-contact-item">
+              📍 Cabin No. 8, B-135, Sector-2, Noida, UP, 201301
+            </p>
+
+            <p className="footer-contact-item">
+              📧 support@bouncybucket.com
+            </p>
+
+            <p className="footer-contact-item">
+              📞 +91 9876543210
+            </p>
+          </div>
+
+          {/* EXISTING NEWSLETTER */}
+          <h4 className="mt-6">The Guest List</h4>
           <p>Get early access to drops and sustainable living insights.</p>
+
           <form
             className="newsletter-form"
             onSubmit={(e) => e.preventDefault()}
@@ -103,6 +123,7 @@ export default function Footer() {
               </button>
             </div>
           </form>
+
         </div>
       </div>
 

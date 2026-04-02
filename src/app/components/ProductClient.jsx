@@ -29,6 +29,8 @@ export default function ProductClient({ initialProduct }) {
 
   const { addToCart, cartItems, setIsCartOpen } = useCart();
 
+  const router = useRouter()
+
   useEffect(() => {
     if (isCustomizing) {
       setActiveImgIdx(0);
