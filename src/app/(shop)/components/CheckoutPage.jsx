@@ -237,59 +237,71 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-  if (!isAddingAddress && selectedAddressId && savedAddresses.length > 0) {
-    const selected = savedAddresses.find(a => a._id === selectedAddressId);
+    if (!isAddingAddress && selectedAddressId && savedAddresses.length > 0) {
+      const selected = savedAddresses.find(a => a._id === selectedAddressId);
 
-    if (selected && selected.zip && deliveryContext?.pincode !== selected.zip) {
-      const pin = selected.zip;
-      
-      // Check if it's a known Express/NCR zone by pincode prefix
-      // Delhi (11), Noida (201), Gurgaon (122), Ghaziabad (201)
-      const isExpressZone = pin.startsWith("11");
-      const isNCRZone = pin.startsWith("201") || pin.startsWith("122") || pin.startsWith("121");
+      if (selected && selected.zip && deliveryContext?.pincode !== selected.zip) {
+        const pin = selected.zip;
 
-      if (isExpressZone) {
-        saveAndSync(pin, 8.4, selected.city || "Delhi", [28.6, 77.2]);
-      } else if (isNCRZone) {
-        saveAndSync(pin, 35.0, selected.city || "NCR", [28.4, 77.0]);
-      } else {
-        // NATIONAL: High distance to trigger the 2-4 days logic (e.g., 500km)
-        saveAndSync(pin, 500.0, selected.city, [0, 0]);
+        // Check if it's a known Express/NCR zone by pincode prefix
+        // Delhi (11), Noida (201), Gurgaon (122), Ghaziabad (201)
+        const isExpressZone = pin.startsWith("11");
+        const isNCRZone = pin.startsWith("201") || pin.startsWith("122") || pin.startsWith("121");
+
+        if (isExpressZone) {
+          saveAndSync(pin, 8.4, selected.city || "Delhi", [28.6, 77.2]);
+        } else if (isNCRZone) {
+          saveAndSync(pin, 35.0, selected.city || "NCR", [28.4, 77.0]);
+        } else {
+          // NATIONAL: High distance to trigger the 2-4 days logic (e.g., 500km)
+          saveAndSync(pin, 500.0, selected.city, [0, 0]);
+        }
       }
     }
-  }
-}, [selectedAddressId, isAddingAddress, savedAddresses]);
+  }, [selectedAddressId, isAddingAddress, savedAddresses]);
 
   const handlePincodeChange = async (e) => {
     const pin = e.target.value.replace(/\D/g, ""); // Allow only numbers
     setNewAddr({ ...newAddr, pincode: pin });
 
     if (pin.length === 6) {
-      setSidebarLoading(true); // Show loading in sidebar
+      setSidebarLoading(true);
       try {
         const res = await fetch(`https://api.zippopotam.us/in/${pin}`);
         const data = await res.json();
 
         if (data && data.places && data.places.length > 0) {
-          const { latitude, longitude, "place name": city } = data.places[0];
-          const lat = parseFloat(latitude);
-          const lng = parseFloat(longitude);
+          const place = data.places[0];
+          const city = place["place name"];
+          const state = place["state"];
+          const lat = parseFloat(place.latitude);
+          const lng = parseFloat(place.longitude);
           const dist = calculateDistance(lat, lng);
 
-          // Update city/state in form
+          // UPDATE FORM STATE IMMEDIATELY
           setNewAddr(prev => ({
             ...prev,
             city: city,
-            state: data.places[0].state || prev.state,
+            state: state,
+            pincode: pin
           }));
 
-          // CRITICAL: Sync with global context so sidebar updates
+          // SYNC SIDEBAR
           saveAndSync(pin, dist, city, [lat, lng]);
         }
       } catch (err) {
         // Fallback logic
         const isDelhi = pin.startsWith("11");
-        saveAndSync(pin, isDelhi ? 8.4 : 45.2, isDelhi ? "South Delhi" : "National", [0, 0]);
+        const fallbackCity = isDelhi ? "South Delhi" : "National";
+        const fallbackState = isDelhi ? "Delhi" : "";
+
+        setNewAddr(prev => ({
+          ...prev,
+          city: fallbackCity,
+          state: fallbackState
+        }));
+
+        saveAndSync(pin, isDelhi ? 8.4 : 45.2, fallbackCity, [0, 0]);
       } finally {
         setSidebarLoading(false);
       }
@@ -497,25 +509,63 @@ export default function CheckoutPage() {
                   <div className="address-section">
                     <div className="address-grid">
                       <div className="address-card add-btn" onClick={() => setIsAddingAddress(true)}>
-                        <Plus size={32} /><p>Add New Address</p>
+                        <Plus size={32} />
+                        <p>Add New Address</p>
                       </div>
+
                       {savedAddresses.map((addr) => (
-                        <div key={addr._id} className={`address-card ${selectedAddressId === addr._id ? "selected" : ""}`} onClick={() => setSelectedAddressId(addr._id)}>
-                          <strong>{addr.name}</strong>
-                          <p>{addr.street}, {addr.city}</p>
+                        <div
+                          key={addr._id}
+                          className={`address-card ${selectedAddressId === addr._id ? "selected" : ""}`}
+                          onClick={() => setSelectedAddressId(addr._id)}
+                        >
+                          <div className="card-selection-indicator">
+                            {selectedAddressId === addr._id && <Check size={14} color="white" />}
+                          </div>
+
+                          <div className="addr-header">
+                            <strong>{addr.name}</strong>
+                            {addr.isDefault && <span className="default-tag">DEFAULT</span>}
+                          </div>
+
+                          <div className="addr-body">
+                            <p className="addr-line">{addr.street}</p>
+                            <p className="addr-location">{addr.city}, {addr.state} - {addr.zip}</p>
+                          </div>
+
+                          <div className="addr-footer">
+                            <div className="contact-item">
+                              <Lock size={12} className="text-slate-400" /> {/* Icon proxy for Phone */}
+                              <span>{addr.number}</span>
+                            </div>
+                            <div className="contact-item">
+                              <Shield size={12} className="text-slate-400" /> {/* Icon proxy for Email */}
+                              <span>{userEmail}</span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-                    <button className="btn-action" onClick={handleContinueToPayment} disabled={!selectedAddressId}>Continue to Payment</button>
+                    <button
+                      className="btn-action"
+                      onClick={handleContinueToPayment}
+                      disabled={!selectedAddressId}
+                    >
+                      Deliver to this Address
+                    </button>
                   </div>
                 ) : (
                   <form className="modern-form animate-up" onSubmit={handleContinueToPayment}>
                     <div className="input-row">
                       <div className="input-group">
                         <label>Full Name*</label>
-                        <input type="text" onChange={(e) => setNewAddr({ ...newAddr, fullName: e.target.value })} required />
+                        <input
+                          type="text"
+                          value={newAddr.fullName} // PERSIST DATA
+                          onChange={(e) => setNewAddr({ ...newAddr, fullName: e.target.value })}
+                          required
+                        />
                       </div>
-                      {/* ADDED EMAIL FIELD HERE */}
                       <div className="input-group">
                         <label>Email Address*</label>
                         <input
@@ -526,23 +576,62 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
+
                     <div className="input-row">
                       <div className="input-group">
                         <label>Phone Number*</label>
-                        <input type="tel" onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })} required />
+                        <input
+                          type="tel"
+                          value={newAddr.phone} // PERSIST DATA
+                          onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })}
+                          required
+                        />
                       </div>
                       <div className="input-group">
                         <label>Street Address*</label>
-                        <input type="text" onChange={(e) => setNewAddr({ ...newAddr, addressLine: e.target.value })} required />
+                        <input
+                          type="text"
+                          value={newAddr.addressLine} // PERSIST DATA
+                          onChange={(e) => setNewAddr({ ...newAddr, addressLine: e.target.value })}
+                          required
+                        />
                       </div>
                     </div>
+
                     <div className="input-row triplet">
                       <div className="input-group">
                         <label>Pincode*</label>
-                        <input type="text" maxLength="6" value={newAddr.pincode} onChange={handlePincodeChange} required />
+                        <input
+                          type="text"
+                          maxLength="6"
+                          value={newAddr.pincode}
+                          onChange={handlePincodeChange}
+                          required
+                          placeholder="6 Digit PIN"
+                        />
                       </div>
-                      <div className="input-group"><label>City*</label><input type="text" value={newAddr.city} readOnly /></div>
-                      <div className="input-group"><label>State*</label><input type="text" value={newAddr.state} readOnly /></div>
+                      <div className="input-group">
+                        <label>City*</label>
+                        <input
+                          type="text"
+                          value={newAddr.city}
+                          onChange={(e) => setNewAddr({ ...newAddr, city: e.target.value })} // Allow manual edit if needed
+                          required
+                          className={!newAddr.city ? "input-pending" : ""}
+                          placeholder="City"
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>State*</label>
+                        <input
+                          type="text"
+                          value={newAddr.state}
+                          onChange={(e) => setNewAddr({ ...newAddr, state: e.target.value })} // Allow manual edit
+                          required
+                          className={!newAddr.state ? "input-pending" : ""}
+                          placeholder="State"
+                        />
+                      </div>
                     </div>
                     <button type="submit" className="btn-action">Proceed to Payment</button>
                   </form>

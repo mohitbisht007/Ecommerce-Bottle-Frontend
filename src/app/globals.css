@@ -1308,10 +1308,81 @@ input[type="password"]::placeholder{letter-spacing:normal}
 .add-address-card{height:180px;border:2px dashed #e2e8f0;background:#f8fafc;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#64748b;font-weight:700;cursor:pointer;transition:all .2s ease}
 .add-address-card:hover{border-color:#0A1E37;color:#0A1E37;background:#fff1f2}
 .plus-icon{font-size:32px;line-height:1}
-.address-card{position:relative;background:#fff;border:1px solid #f1f5f9;border-radius:16px;padding:24px;box-shadow:0 4px 12px #00000008;display:flex;flex-direction:column;justify-content:space-between;min-height:180px;transition:transform .2s ease}
-.address-card:hover{transform:translateY(-4px);box-shadow:0 12px 20px #0000000f}
-.default-badge{position:absolute;top:12px;right:12px;background:#1e293b;color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;padding:4px 8px;border-radius:6px}
-.address-text{font-size:14px;color:#475569;line-height:1.6;margin:0}
+.address-card {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: white;
+}
+
+.address-card.selected {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.addr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.default-tag {
+  font-size: 10px;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.addr-body p {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.addr-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.card-selection-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.address-card.selected .card-selection-indicator {
+  background: #0f172a;
+  border-color: #0f172a;
+}
 .address-actions{margin-top:20px;display:flex;gap:12px;border-top:1px solid #f1f5f9;padding-top:15px}
 .addr-btn{background:none;border:none;font-size:13px;font-weight:700;cursor:pointer;padding:0}
 .addr-btn.edit{color:#3b82f6}
