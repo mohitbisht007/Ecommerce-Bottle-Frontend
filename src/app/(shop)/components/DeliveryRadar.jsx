@@ -1,24 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import dynamic from 'next/dynamic';
 import { useRouter } from "next/navigation";
 import { calculateDistance } from "@/app/helpers/deliveryLogic";
 import { MapPin, Zap, Truck, Globe, Loader2, Navigation } from "lucide-react";
-
-const MapComponent = dynamic(() => import("./MapVisual"), {
-  ssr: false,
-  loading: () => <div className="map-loading-placeholder">Syncing Satellites...</div>
-});
-
-const HUB_COORDS = [28.5355, 77.2739];
 
 export default function DeliveryRadar() {
   const router = useRouter();
   const [pincode, setPincode] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [userCoords, setUserCoords] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const renderIcon = (iconName) => {
     switch (iconName) {
@@ -29,14 +19,12 @@ export default function DeliveryRadar() {
     }
   };
 
-  // Persistence: Load saved pincode/result on mount
   useEffect(() => {
     const savedContext = localStorage.getItem("delivery_context");
     if (savedContext) {
-      const { pincode: savedPin, result: savedRes, coords } = JSON.parse(savedContext);
+      const { pincode: savedPin, result: savedRes } = JSON.parse(savedContext);
       setPincode(savedPin);
       setResult(savedRes);
-      setUserCoords(coords);
     }
   }, []);
 
@@ -51,14 +39,8 @@ export default function DeliveryRadar() {
 
       if (data.places && data.places.length > 0) {
         const { latitude, longitude, "place name": city } = data.places[0];
-        const lat = parseFloat(latitude);
-        const lng = parseFloat(longitude);
-        const distance = calculateDistance(lat, lng);
-
-        const coords = [lat, lng];
-        setUserCoords(coords);
-        processResult(distance, city, coords);
-
+        const distance = calculateDistance(parseFloat(latitude), parseFloat(longitude));
+        processResult(distance, city, [latitude, longitude]);
       } else {
         throw new Error("Invalid Pincode");
       }
@@ -66,10 +48,7 @@ export default function DeliveryRadar() {
       const isDelhi = pincode.startsWith("11");
       const demoDistance = isDelhi ? 8.4 : 45.2;
       const demoCity = isDelhi ? "South Delhi" : "NCR Region";
-      const demoCoords = isDelhi ? [28.6139, 77.2090] : [28.4595, 77.0266];
-
-      setUserCoords(demoCoords);
-      processResult(demoDistance, demoCity, demoCoords);
+      processResult(demoDistance, demoCity, [28, 77]);
     } finally {
       setLoading(false);
     }
@@ -78,7 +57,6 @@ export default function DeliveryRadar() {
   const processResult = (distance, city, coords) => {
     let status = {};
     if (distance <= 10) {
-      // Change icon: <Zap /> to icon: "zap"
       status = { type: 'EXPRESS', time: '90 MINS', desc: 'Priority Crafting', icon: "zap", color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' };
     } else if (distance <= 50) {
       status = { type: 'NCR', time: 'SAME DAY', desc: 'City Wide Sprint', icon: "truck", color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' };
@@ -88,14 +66,9 @@ export default function DeliveryRadar() {
 
     const finalResult = { ...status, city, distance: distance.toFixed(1) };
     setResult(finalResult);
-
-    localStorage.setItem("delivery_context", JSON.stringify({
-      pincode,
-      result: finalResult,
-      coords
-    }));
+    localStorage.setItem("delivery_context", JSON.stringify({ pincode, result: finalResult, coords }));
     window.dispatchEvent(new Event("delivery_context_updated"));
-    router.push("/shop?check=success")
+    router.push("/shop?check=success");
   };
 
   return (
@@ -140,9 +113,8 @@ export default function DeliveryRadar() {
             </button>
           </form>
 
-          {/* THE WORKING RESULT CARD */}
           {result && (
-            <div className={`v-result-card ${result ? 'active' : ''}`} style={{ '--accent': result.color }}>
+            <div className="v-result-card active" style={{ '--accent': result.color }}>
               <div className="v-res-top">
                 <div className="v-res-icon" style={{ backgroundColor: result.bg, color: result.color }}>
                   {renderIcon(result.icon)}
@@ -155,19 +127,12 @@ export default function DeliveryRadar() {
               </div>
               <div className="v-res-footer">
                 <div className="v-progress-bg">
-                  <div className="v-progress-fill" style={{ background: result.color }}></div>
+                  <div className="v-progress-fill" style={{ background: result.color, width: '100%' }}></div>
                 </div>
                 <p>{result.desc} available for your location</p>
               </div>
             </div>
           )}
-        </div>
-
-        <div className="v-visual">
-          <div className="v-map-frame">
-            <MapComponent hubCoords={HUB_COORDS} userCoords={userCoords} resultColor={result?.color} />
-            <div className="v-map-overlay"></div>
-          </div>
         </div>
       </div>
     </section>

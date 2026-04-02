@@ -655,7 +655,7 @@
   background: #0f172a; /* Sophisticated Deep Navy/Black */
   color: #f8fafc;
   padding: 100px 0 40px;
-  margin-top: 80px;
+  margin-top: 40px;
   border-top: 4px solid #0A1E37; /* Pink Brand accent line */
 }
 
@@ -841,11 +841,22 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .footer-container { grid-template-columns: 1fr 1fr; gap: 50px; }
+  .site-footer{padding: 0;}
 }
 
 @media (max-width: 640px) {
   .footer-container { grid-template-columns: 1fr; text-align: center; }
   .footer-brand-section .footer-bio { margin: 20px auto; align-items: center; }
+  .footer-brand-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* This centers the logo and bio */
+    text-align: center;
+  }
+  .footer-brand-section .footer-bio {
+    margin: 20px auto; /* Centers the bio text block */
+    max-width: 100%;    /* Allows it to use full width if needed */
+  }
   .social-links, .bottom-content, .payment-icons-row { justify-content: center; }
   .bottom-content { flex-direction: column; gap: 20px; }
   .payment-icons-row {
@@ -2959,7 +2970,7 @@ to{transform:rotate(360deg)}
 .range-header{padding:0 5%;margin-bottom:40px}
 .tiny-label{color:#64748b;font-weight:800;font-size:11px;letter-spacing:2px}
 .title-stack h2{font-size:clamp(24px,5vw,36px);font-weight:950;color:#0f172a;letter-spacing:-1.5px}
-.glass-scroll-container{display:flex;gap:30px;overflow-x:auto;padding:20px 5% 50px;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.glass-scroll-container{display:flex;gap:30px;overflow-x:auto;padding:0 50px;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .glass-scroll-container::-webkit-scrollbar{display:none}
 .glass-card{flex:0 0 280px;height:180px;position:relative;text-decoration:none;scroll-snap-align:center;border-radius:30px;background:#ffffffb3;border:1px solid #fff6;box-shadow:0 10px 30px #00000008;overflow:hidden;transition:all .4s cubic-bezier(0.175,0.885,0.32,1.275)}
 .glass-content{position:relative;z-index:2;padding:30px;height:100%;display:flex;flex-direction:column;justify-content:space-between;backdrop-filter:blur(10px)}
@@ -4157,7 +4168,7 @@ to{transform:rotate(360deg)}
 
 
 /* -------------------------------------------------------------------------------------------------------- */
-
+/* Delivery Component */
 
 .velocity-root {
   background: #ffffff;
@@ -4248,13 +4259,11 @@ to{transform:rotate(360deg)}
 
 /* MAIN GRID */
 .velocity-grid {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 80px;
   padding: 0 24px;
-  align-items: center;
+  text-align: center;
 }
 
 .hub-tag {
@@ -4272,7 +4281,7 @@ to{transform:rotate(360deg)}
 
 .v-headline { font-size: 38px; font-weight: 800; color: #111; margin-bottom: 15px; }
 .v-headline span { color: #0A1E37; }
-.v-sub { color: #64748b; font-size: 17px; margin-bottom: 35px; max-width: 450px; }
+.v-sub { color: #64748b; font-size: 17px; margin-bottom: 35px; }
 
 /* INPUT BOX */
 .v-input-box {

@@ -71,10 +71,19 @@ export default function Footer() {
               <Link href="/faq">Common Questions</Link>
             </li>
             <li>
-              <Link href="/shipping">Shipping Info</Link>
+              <Link href="/shipping-details">Shipping Info</Link>
             </li>
             <li>
-              <Link href="/contact">Contact Us</Link>
+              <Link href="/contact-us">Contact Us</Link>
+            </li>
+            <li>
+              <Link href="/terms&conditions">Terms & Conditions</Link>
+            </li>
+            <li>
+              <Link href="/privacy&policy">Privacy & Policy</Link>
+            </li>
+            <li>
+              <Link href="/returns&cancellations">Returns & Cancellations</Link>
             </li>
           </ul>
         </div>
