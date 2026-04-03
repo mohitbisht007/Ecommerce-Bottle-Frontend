@@ -1,5 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Alex+Brush&family=Great+Vibes&family=Montserrat:wght@700&family=Playfair+Display:ital,wght@1,700&display=swap');
 @import "tailwindcss";
-
 /* ===== Header: hamburger only on mobile, categories hidden on mobile ===== */
 
 /* base header layout (desktop-first) */
@@ -2032,31 +2032,50 @@ input[type="password"]::placeholder{letter-spacing:normal}
 }
 
 .engraving-canvas {
-  position: absolute;
-  transform: translate(-50%, -50%) rotate(-90deg); /* Vertical Engraving */
-  pointer-events: none; /* Let clicks pass through to image */
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  z-index: 5;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    /* Center the anchor point */
+    transform-origin: center center; 
+}
+
+.engraving-canvas.horizontal {
+    width: 30%; /* Limits the text width to the bottle center */
+    transform: translate(-50%, -50%);
+}
+
+.engraving-canvas.vertical {
+    width: 50%; /* Height limit when rotated */
+    transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .live-text {
-  font-size: clamp(1.2rem, 4vw, 2.2rem);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.6); /* Etched Silver look */
-  
-  /* This makes the text "sink" into the bottle texture */
-  mix-blend-mode: overlay; 
-  text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.3);
-  
-  white-space: nowrap;
-  max-width: 250px;
-  overflow: hidden;
-  transition: all 0.2s ease-out;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1;
+    
+    /* THE REAL PRINT LOOK */
+    mix-blend-mode: overlay; 
+    opacity: 0.85; /* Makes the bottle texture show through slightly */
+    
+    /* Subtle inner shadow to mimic engraving depth */
+    filter: drop-shadow(0.5px 0.5px 0px rgba(255,255,255,0.2)); 
 }
+
+/* Specific Font Fixes */
+[style*="Great Vibes"], [style*="Alex Brush"] {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+}
+
+.font-pacifico { font-family: 'Pacifico', cursive; }
+.font-montserrat { font-family: 'Montserrat', sans-serif; }
+.font-playfair { font-family: 'Playfair Display', serif; font-style: italic; }
+.font-greatvibes { font-family: 'Great Vibes', cursive; }
+.font-alexbrush { font-family: 'Alex Brush', cursive; }
 
 
 .main-viewport {
@@ -2205,6 +2224,76 @@ input[type="password"]::placeholder{letter-spacing:normal}
   background: transparent;
   text-transform: uppercase;
   transition: all 0.3s ease;
+}
+
+.studio-grid-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.font-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.font-chip {
+    position: relative;
+    padding: 15px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.font-chip.is-selected {
+    border-color: #000;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.font-preview {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+}
+
+.font-name-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.check-dot {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #000;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.limit-reached {
+    color: #ef4444 !important;
+    font-weight: 800;
+}
+
+/* Hide horizontal scroll for font grid on mobile */
+@media (max-width: 600px) {
+    .font-selection-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .studio-input::placeholder {

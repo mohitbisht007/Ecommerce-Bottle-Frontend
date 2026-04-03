@@ -19,10 +19,13 @@ export default function ProductClient({ initialProduct }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
 
+
   // Customization States
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [customText, setCustomText] = useState("");
   const [selectedFont, setSelectedFont] = useState("'Inter', sans-serif");
+  const [orientation, setOrientation] = useState("horizontal");
+  const [engravingSize, setEngravingSize] = useState("2inch");
 
   const [selectedColor, setSelectedColor] = useState(initialProduct.variants[0]?.colorName || "");
   const [selectedCapacity, setSelectedCapacity] = useState(initialProduct.variants[0]?.capacity || "");
@@ -84,6 +87,8 @@ export default function ProductClient({ initialProduct }) {
             isCustomizing={isCustomizing}
             customText={customText}
             selectedFont={selectedFont}
+            orientation={orientation} // Important
+            engravingSize={engravingSize}
           />
         </aside>
 
@@ -134,6 +139,11 @@ export default function ProductClient({ initialProduct }) {
               selectedFont={selectedFont}
               setSelectedFont={setSelectedFont}
               maxChars={product.customizationOptions?.maxChars}
+              orientation={orientation}
+              setOrientation={setOrientation}
+              engravingSize={engravingSize}
+              setEngravingSize={setEngravingSize}
+              currentCapacity={selectedCapacity}
             />
           )}
 

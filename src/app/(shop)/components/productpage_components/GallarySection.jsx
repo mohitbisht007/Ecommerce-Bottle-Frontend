@@ -5,6 +5,34 @@ import { Heart, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useWishlist } from "@/app/context/WishlistContext";
 import { toast } from "react-hot-toast";
 
+const getCustomizationRules = (capacity, orientation, engravingSize) => {
+    const caps = capacity?.toLowerCase() || "750ml";
+    
+    // Scale multipliers - Adjusted to make 3inch noticeably "Bold"
+    const sizeMultiplier = {
+        "1inch": 0.5,   
+        "2inch": 0.85,   
+        "3inch": 1.3 // Increased for real impact
+    };
+    const m = sizeMultiplier[engravingSize] || 0.85;
+
+    const baseRules = {
+        "500ml": { horizontal: 1.0, vertical: 1.4, widthLimit: "25%" },
+        "750ml": { horizontal: 1.3, vertical: 1.7, widthLimit: "30%" },
+        "1000ml": { horizontal: 1.6, vertical: 2.1, widthLimit: "35%" }
+    };
+
+    const config = baseRules[caps] || baseRules["750ml"];
+    // FIX: Use the specific orientation base size
+    const baseSize = orientation === "vertical" ? config.vertical : config.horizontal;
+
+    return {
+        fontSize: `${baseSize * m}rem`,
+        widthLimit: config.widthLimit,
+        maxChars: orientation === "vertical" ? 10 : 15
+    };
+};
+
 export default function GallerySection({
     product,
     discount,
@@ -12,8 +40,11 @@ export default function GallerySection({
     activeImgIdx,
     setActiveImgIdx,
     customText = "",
-    selectedFont = "Inter",
-    isCustomizing = false }) {
+    selectedFont = "Montserrat",
+    isCustomizing = false,
+    orientation = "vertical", // "horizontal" or "vertical"
+    engravingSize,
+}) {
 
     const images = currentVariant?.images || [];
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -21,6 +52,13 @@ export default function GallerySection({
     const touchStartX = useRef(null);
     const autoPlayRef = useRef(null);
     const { toggleWishlist, isItemWishlisted, wishlistIds } = useWishlist()
+
+    const activeRules = getCustomizationRules(currentVariant?.capacity, orientation, engravingSize);
+
+    // 2. Logic for Engraving Color (Black vs White)
+    const engravingColor = currentVariant?.engravingColorType === 'dark'
+        ? "rgba(0,0,0,0.8)"      // Black font for light bottles
+        : "rgba(255,255,255,0.9)";
 
 
     const handleNext = useCallback(() => {
@@ -61,14 +99,14 @@ export default function GallerySection({
 
     // Auto-play Logic
     useEffect(() => {
-    // We add !isCustomizing to the condition
-    if (!isPaused && !isLightboxOpen && images.length > 1 && !isCustomizing) {
-        autoPlayRef.current = setInterval(handleNext, 4000);
-    } else {
-        clearInterval(autoPlayRef.current);
-    }
-    return () => clearInterval(autoPlayRef.current);
-}, [isPaused, isLightboxOpen, handleNext, images.length, isCustomizing]);
+        // We add !isCustomizing to the condition
+        if (!isPaused && !isLightboxOpen && images.length > 1 && !isCustomizing) {
+            autoPlayRef.current = setInterval(handleNext, 4000);
+        } else {
+            clearInterval(autoPlayRef.current);
+        }
+        return () => clearInterval(autoPlayRef.current);
+    }, [isPaused, isLightboxOpen, handleNext, images.length, isCustomizing]);
 
     // Scroll Lock for Lightbox
     useEffect(() => {
@@ -141,18 +179,28 @@ export default function GallerySection({
 
                 <div className="viewport-clicker" onClick={() => !isCustomizing && setIsLightboxOpen(true)}>
                     <Image src={images[activeImgIdx]} alt={product?.title} fill className="main-img-render" priority />
-                    
+
                     {/* --- LIVE ENGRAVING LAYER --- */}
                     {isCustomizing && customText && (
-                        <div 
-                          className="engraving-canvas"
-                          style={{
-                            top: product.customizationOptions?.textPosition?.top || "55%",
-                            left: product.customizationOptions?.textPosition?.left || "50%",
-                            fontFamily: selectedFont
-                          }}
+                        <div
+                            className={`engraving-canvas ${orientation}`}
+                            style={{
+                                top: product.customizationOptions?.textPosition?.top || "55%",
+                                left: product.customizationOptions?.textPosition?.left || "50%",
+                                fontFamily: selectedFont,
+                                color: engravingColor,
+                                fontSize: activeRules.fontSize,
+                                letterSpacing: activeRules.letterSpacing,
+                                // Apply rotation based on orientation
+                                transform: orientation === 'vertical'
+                                    ? 'translate(-50%, -50%) rotate(90deg)'
+                                    : 'translate(-50%, -50%)'
+                            }}
                         >
-                            <span className="live-text">{customText}</span>
+                            <span className="live-text">
+                                {/* Limit text strictly based on capacity rules */}
+                                {customText.substring(0, activeRules.maxChars)}
+                            </span>
                         </div>
                     )}
                 </div>
