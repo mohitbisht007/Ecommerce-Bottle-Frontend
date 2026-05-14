@@ -22,6 +22,41 @@ export default function ProductEditor({ productId = null }) {
     tags: "",
     featured: false,
     compareAtPrice: "",
+
+    specifications: {
+      type: "",
+      material: "",
+      weight: "",
+      dimensions: "",
+      finish: "",
+      origin: "",
+
+      insulation: "",
+      hotRetention: "",
+      coldRetention: "",
+
+      leakproof: false,
+      condensationFree: false,
+      rustProof: false,
+
+      suitableFor: [],
+      mouthType: "",
+      lidType: "",
+      dishwasherSafe: false,
+      carHolderFit: false
+    },
+
+    isCustomizable: false,
+
+    customizationOptions: {
+      price: 299,
+      maxChars: 12,
+      allowedFonts: ["Modern", "Elegant", "Sport", "Classic"],
+      textPosition: {
+        top: "55%",
+        left: "50%"
+      }
+    }
   });
 
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -29,6 +64,8 @@ export default function ProductEditor({ productId = null }) {
   const [variants, setVariants] = useState([
     { colorName: "Default", colorCode: "#000000", capacity: "500ml", price: "", stock: 0, images: [], imageFiles: [] },
   ]);
+
+  const isValidHex = (hex) => /^#([0-9A-F]{3}){1,2}$/i.test(hex);
 
   // --- Logic & Handlers ---
 
@@ -85,7 +122,23 @@ export default function ProductEditor({ productId = null }) {
 
   const handleVariantInfoChange = (index, field, value) => {
     const newVariants = [...variants];
-    newVariants[index][field] = value;
+
+    // Only validate for colorCode
+    if (field === "colorCode") {
+      // Allow typing (so user can type # first)
+      newVariants[index][field] = value;
+
+      // Only update if valid HEX OR empty typing state
+      if (!/^#?[0-9A-Fa-f]{0,6}$/.test(value)) return;
+
+      // Auto-fix: ensure it starts with #
+      if (value && !value.startsWith("#")) {
+        newVariants[index][field] = "#" + value;
+      }
+    } else {
+      newVariants[index][field] = value;
+    }
+
     setVariants(newVariants);
   };
 
@@ -168,10 +221,16 @@ export default function ProductEditor({ productId = null }) {
       setUploadStep("Saving product...");
       const finalPayload = {
         ...form,
+        specifications: form.specifications,
+        customizationOptions: form.customizationOptions,
+        isCustomizable: form.isCustomizable,
+
         thumbnail: finalThumbnailUrl,
         variants: processedVariants,
-        compareAtPrice: form.compareAtPrice ? Number(form.compareAtPrice) : undefined,
-        tags: form.tags.split(",").map((t) => t.trim()).filter((t) => t !== ""),
+        compareAtPrice: form.compareAtPrice
+          ? Number(form.compareAtPrice)
+          : undefined,
+        tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
       };
 
       const endpoint = isEditMode ? `/product/update/${productId}` : `/product/add`;
@@ -242,9 +301,179 @@ export default function ProductEditor({ productId = null }) {
           </div>
 
           <div className="editor-card">
+            <h3>Specifications</h3>
+
+            {/* BASIC */}
+            <h4>Basic</h4>
+            <div className="form-grid-2">
+              <input placeholder="Type (Bottle/Mug)"
+                value={form.specifications.type}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, type: e.target.value }
+                })}
+              />
+
+              <input placeholder="Material"
+                value={form.specifications.material}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, material: e.target.value }
+                })}
+              />
+
+              <input placeholder="Weight"
+                value={form.specifications.weight}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, weight: e.target.value }
+                })}
+              />
+
+              <input placeholder="Dimensions"
+                value={form.specifications.dimensions}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, dimensions: e.target.value }
+                })}
+              />
+            </div>
+
+            {/* PERFORMANCE */}
+            <h4>Performance</h4>
+            <div className="form-grid-2">
+              <input placeholder="Insulation"
+                value={form.specifications.insulation}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, insulation: e.target.value }
+                })}
+              />
+
+              <input placeholder="Hot Retention"
+                value={form.specifications.hotRetention}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, hotRetention: e.target.value }
+                })}
+              />
+
+              <input placeholder="Cold Retention"
+                value={form.specifications.coldRetention}
+                onChange={(e) => setForm({
+                  ...form,
+                  specifications: { ...form.specifications, coldRetention: e.target.value }
+                })}
+              />
+            </div>
+
+            {/* BOOLEAN FEATURES */}
+            <div className="checkbox-grid">
+              {["leakproof", "condensationFree", "rustProof"].map((field) => (
+                <label key={field}>
+                  <input
+                    type="checkbox"
+                    checked={form.specifications[field]}
+                    onChange={(e) => setForm({
+                      ...form,
+                      specifications: {
+                        ...form.specifications,
+                        [field]: e.target.checked
+                      }
+                    })}
+                  />
+                  {field}
+                </label>
+              ))}
+            </div>
+
+            {/* USAGE */}
+            <h4>Usage</h4>
+            <input
+              placeholder="Suitable For (comma separated)"
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  specifications: {
+                    ...form.specifications,
+                    suitableFor: e.target.value.split(",").map(s => s.trim())
+                  }
+                })
+              }
+            />
+          </div>
+
+          <div className="editor-card">
+            <h3>Customization</h3>
+
+            <div className="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.isCustomizable}
+                  onChange={(e) => setForm({ ...form, isCustomizable: e.target.checked })}
+                />
+                Enable Customization
+              </label>
+            </div>
+
+            {form.isCustomizable && (
+              <>
+                <div className="form-group">
+                  <label>Engraving Price</label>
+                  <input
+                    type="number"
+                    value={form.customizationOptions.price}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        customizationOptions: {
+                          ...form.customizationOptions,
+                          price: Number(e.target.value)
+                        }
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Max Characters</label>
+                  <input
+                    type="number"
+                    value={form.customizationOptions.maxChars}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        customizationOptions: {
+                          ...form.customizationOptions,
+                          maxChars: Number(e.target.value)
+                        }
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Fonts (comma separated)</label>
+                  <input
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        customizationOptions: {
+                          ...form.customizationOptions,
+                          allowedFonts: e.target.value.split(",").map(f => f.trim())
+                        }
+                      })
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="editor-card">
             <div className="flex-header">
               <h3>Variants (Color & Size)</h3>
-              <button type="button" className="add-var-btn" onClick={addVariant}>+ Add Variant</button>
             </div>
             {variants.map((v, vIdx) => (
               <div key={vIdx} className="variant-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '10px', marginBottom: '15px' }}>
@@ -271,7 +500,22 @@ export default function ProductEditor({ productId = null }) {
                   </div>
                   <div className="form-group">
                     <label>Swatch</label>
-                    <input type="color" value={v.colorCode} onChange={(e) => handleVariantInfoChange(vIdx, "colorCode", e.target.value)} />
+                    <input
+                      type="color"
+                      value={v.colorCode}
+                      onChange={(e) =>
+                        handleVariantInfoChange(vIdx, "colorCode", e.target.value)
+                      }
+                    />
+
+                    <input
+                      type="text"
+                      value={v.colorCode}
+                      onChange={(e) =>
+                        handleVariantInfoChange(vIdx, "colorCode", e.target.value)
+                      }
+                      placeholder="#000000"
+                    />
                   </div>
                   <button
                     type="button"
@@ -336,6 +580,7 @@ export default function ProductEditor({ productId = null }) {
                 </div>
               </div>
             ))}
+            <button type="button" className="add-var-btn" onClick={addVariant}>+ Add Variant</button>
           </div>
         </div>
 
