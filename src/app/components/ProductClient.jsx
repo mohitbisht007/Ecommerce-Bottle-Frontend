@@ -9,6 +9,7 @@ import PurchaseControls from "../(shop)/components/productpage_components/Purcha
 import ReviewSection from "./ReviewSection";
 import ProductSlider from "./ProductSlider";
 import ProductCustomizer from "../(shop)/components/productpage_components/ProductCustomizer";
+import WhatsAppButton from "../(shop)/components/WhatsAppButton";
 import { useCart } from "@/app/context/CartContext";
 import { Edit3, ShoppingBag } from "lucide-react";
 
@@ -184,6 +185,11 @@ export default function ProductClient({ initialProduct }) {
           productId={product._id}
           productRating={product.rating}
           totalReviews={product.reviewsCount}
+        />
+
+        <WhatsAppButton
+          product={product}
+          currentVariant={product.variants[selectedVarIdx]}
         />
       </div>
     </div>
