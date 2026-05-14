@@ -4,6 +4,7 @@ import CategoryTray from '../components/CategoryTray';
 import PriceRangeTray from '../components/PriceRangeTray';
 import ComparisonBanner from './components/ComparisonBanner';
 import DeliveryRadar from './components/DeliveryRadar';
+import WhatsAppButton from './components/WhatsAppButton';
 
 // 1. Metadata remains the same
 export const metadata = {
@@ -73,6 +74,7 @@ export default async function HomePage() {
       />
 
       <PriceRangeTray />
+      <WhatsAppButton />
     </main>
   );
 }

@@ -1,13 +1,21 @@
 "use client";
 
 export default function WhatsAppButton({ product, currentVariant }) {
-  // Replace with your actual business phone number (India format: 91XXXXXXXXXX)
+  // Your business phone number
   const phoneNumber = "917303189499"; 
-  
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
-  
-  // Construct the automatic message
-  const message = `Hi Bouncy Bucket! 👋%0A%0AI am interested in this bottle:%0A*Product:* ${product.title}%0A*Color:* ${currentVariant.colorName}%0A*Capacity:* ${currentVariant.capacity}%0A*Price:* ₹${currentVariant.price}%0A%0ACheck it out here: ${productUrl}`;
+
+  // 1. Logic for dynamic messaging
+  const isProductPage = product && currentVariant;
+
+  const message = isProductPage
+    ? `Hi Bouncy Bucket! 👋%0A%0AI am interested in this bottle:%0A*Product:* ${product.title}%0A*Color:* ${currentVariant.colorName}%0A*Capacity:* ${currentVariant.capacity}%0A*Price:* ₹${currentVariant.price}%0A%0ACheck it out here: ${productUrl}`
+    : `Hi Bouncy Bucket! 👋%0A%0AI have a general query about your products and services. Could you please assist me?`;
+
+  // 2. Logic for dynamic hover tooltips
+  const tooltipText = isProductPage 
+    ? `Query for this product?` 
+    : `Have a question? Chat with us!`;
 
   const whatsappLink = `https://wa.me/${phoneNumber}?text=${message}`;
 
@@ -19,6 +27,9 @@ export default function WhatsAppButton({ product, currentVariant }) {
       className="whatsapp-float"
       aria-label="Chat on WhatsApp"
     >
+      {/* Tooltip for PC users */}
+      <span className="whatsapp-tooltip">{tooltipText}</span>
+
       {/* Official WhatsApp SVG Logo */}
       <svg 
         viewBox="0 0 448 512" 

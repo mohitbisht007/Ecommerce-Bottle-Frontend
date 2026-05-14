@@ -5,6 +5,7 @@ import ProductCard from "@/app/components/ProductCard";
 import { SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import { useTransition } from "react";
 import GenericModal from "@/app/components/GenericModal";
+import WhatsAppButton from "./WhatsAppButton";
 
 const extractAvailableColors = (products) => {
   const colorMap = new Map();
@@ -310,6 +311,7 @@ export default function ShopClient({ initialProducts, availableCategories, }) {
           <div className={`product-grid ${isPending ? "grid-loading" : ""}`}>
             {initialProducts.map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
+          <WhatsAppButton />
         </main>
       </div>
     </div>
