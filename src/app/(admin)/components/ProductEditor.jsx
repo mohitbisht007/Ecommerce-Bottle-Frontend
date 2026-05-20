@@ -62,8 +62,45 @@ export default function ProductEditor({ productId = null }) {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [variants, setVariants] = useState([
-    { colorName: "Default", colorCode: "#000000", capacity: "500ml", price: "", stock: 0, images: [], imageFiles: [] },
+    {
+      baseColorName: "",
+      colorName: "",
+      colorCode: "#000000",
+      images: [],
+      imageFiles: [],
+      sizes: [
+        {
+          capacity: "500ml",
+          price: "",
+          compareAtPrice: "",
+          stock: 0
+        }
+      ]
+    }
   ]);
+
+  const addSize = (vIdx) => {
+    const newVariants = [...variants];
+
+    newVariants[vIdx].sizes.push({
+      capacity: "",
+      price: "",
+      compareAtPrice: "",
+      stock: 0
+    });
+
+    setVariants(newVariants);
+  };
+
+  const removeSize = (vIdx, sIdx) => {
+    const newVariants = [...variants];
+    if (newVariants[vIdx].sizes.length > 1) {
+      newVariants[vIdx].sizes.splice(sIdx, 1);
+      setVariants(newVariants);
+    }
+  };
+
+
 
   const isValidHex = (hex) => /^#([0-9A-F]{3}){1,2}$/i.test(hex);
 
@@ -168,10 +205,27 @@ export default function ProductEditor({ productId = null }) {
     setVariants(newVariants);
   };
 
-  const addVariant = () => setVariants([...variants, { colorName: "", colorCode: "#000000", capacity: "500ml", price: "", stock: 0, images: [], imageFiles: [] }]);
+  const addVariant = () => setVariants([
+    ...variants,
+    {
+      baseColorName: "",
+      colorName: "",
+      colorCode: "#000000",
+      images: [],
+      imageFiles: [],
+      sizes: [{ capacity: "500ml", price: "", compareAtPrice: "", stock: 0 }]
+    }
+  ]);
+
 
   const removeVariant = (index) => {
     if (variants.length > 1) setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  const handleSizeChange = (vIdx, sIdx, field, value) => {
+    const newVariants = [...variants];
+    newVariants[vIdx].sizes[sIdx][field] = value;
+    setVariants(newVariants);
   };
 
   const handleSubmit = async (e) => {
@@ -208,15 +262,38 @@ export default function ProductEditor({ productId = null }) {
         }));
 
         return {
+          baseColorName: v.baseColorName,
           colorName: v.colorName,
           colorCode: v.colorCode,
-          capacity: v.capacity,
-          price: Number(v.price),
-          stock: Number(v.stock),
           images: [...existingUrls, ...newUploads],
+          // Map the nested sizes
+          sizes: v.sizes.map(s => ({
+            capacity: s.capacity,
+            price: parseFloat(s.price) || 0,
+            compareAtPrice: s.compareAtPrice
+              ? parseFloat(s.compareAtPrice)
+              : undefined,
+            stock: parseInt(s.stock) || 0
+          }))
         };
       }));
       setProgress(80);
+
+      const allPrices = processedVariants.flatMap(v =>
+        v.sizes
+          .map(s => s.price)
+          .filter(price => typeof price === "number" && price > 0)
+      );
+
+      if (allPrices.length === 0) {
+        alert("Please enter at least one valid price");
+        setLoading(false);
+        return;
+      }
+
+      const cheapestPrice = allPrices.length
+        ? Math.min(...allPrices)
+        : 0;
 
       setUploadStep("Saving product...");
       const finalPayload = {
@@ -225,6 +302,7 @@ export default function ProductEditor({ productId = null }) {
         customizationOptions: form.customizationOptions,
         isCustomizable: form.isCustomizable,
 
+        price: cheapestPrice, // Automatic "Starting at" price
         thumbnail: finalThumbnailUrl,
         variants: processedVariants,
         compareAtPrice: form.compareAtPrice
@@ -245,7 +323,11 @@ export default function ProductEditor({ productId = null }) {
       if (res.ok) {
         setProgress(100);
         router.push("/admin/products");
-      } else { alert("Server Error"); }
+      } else {
+        const errorData = await res.json();
+        console.log(errorData);
+        alert(errorData.message || "Server Error");
+      }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
@@ -479,55 +561,46 @@ export default function ProductEditor({ productId = null }) {
               <div key={vIdx} className="variant-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '10px', marginBottom: '15px' }}>
                 <div className="variant-inputs" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div className="form-group">
+                    <label>Base Color Name</label>
+                    <input type="text" value={v.baseColorName} onChange={(e) => handleVariantInfoChange(vIdx, "baseColorName", e.target.value)} />
+                  </div>
+                  <div className="form-group">
                     <label>Color Name</label>
                     <input type="text" value={v.colorName} onChange={(e) => handleVariantInfoChange(vIdx, "colorName", e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label>Size / Capacity</label>
-                    <select value={v.capacity} onChange={(e) => handleVariantInfoChange(vIdx, "capacity", e.target.value)}>
-                      <option value="500ml">500ml</option>
-                      <option value="750ml">750ml</option>
-                      <option value="1L">1L</option>
-                    </select>
+                    <label>Swatch Code</label>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      <input type="color" value={v.colorCode} onChange={(e) => handleVariantInfoChange(vIdx, "colorCode", e.target.value)} />
+                      <input type="text" value={v.colorCode} onChange={(e) => handleVariantInfoChange(vIdx, "colorCode", e.target.value)} />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Price (₹)*</label>
-                    <input type="number" required value={v.price} onChange={(e) => handleVariantInfoChange(vIdx, "price", e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Stock*</label>
-                    <input type="number" required value={v.stock} onChange={(e) => handleVariantInfoChange(vIdx, "stock", e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Swatch</label>
-                    <input
-                      type="color"
-                      value={v.colorCode}
-                      onChange={(e) =>
-                        handleVariantInfoChange(vIdx, "colorCode", e.target.value)
-                      }
-                    />
+                </div>
 
-                    <input
-                      type="text"
-                      value={v.colorCode}
-                      onChange={(e) =>
-                        handleVariantInfoChange(vIdx, "colorCode", e.target.value)
-                      }
-                      placeholder="#000000"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="remove-var-btn"
-                    onClick={(e) => {
-                      e.preventDefault(); // Extra safety
-                      removeVariant(vIdx);
-                    }}
-                    style={{ color: "red", alignSelf: 'flex-end', marginBottom: '10px' }}
-                  >
-                    Remove
-                  </button>
+                <div className="sizes-section" style={{ background: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
+                  <h4 style={{ marginBottom: '10px' }}>Pricing & Capacity per Size</h4>
+                  {v.sizes.map((s, sIdx) => (
+                    <div key={sIdx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 40px', gap: '10px', alignItems: 'flex-end', marginBottom: '10px' }}>
+                      <div className="form-group">
+                        <label style={{ fontSize: '12px' }}>Capacity</label>
+                        <input type="text" placeholder="500ml" value={s.capacity} onChange={(e) => handleSizeChange(vIdx, sIdx, "capacity", e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label style={{ fontSize: '12px' }}>Strike Price</label>
+                        <input type="number" placeholder="1500" value={s.compareAtPrice} onChange={(e) => handleSizeChange(vIdx, sIdx, "compareAtPrice", e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label style={{ fontSize: '12px' }}>Sale Price</label>
+                        <input type="number" placeholder="1200" value={s.price} onChange={(e) => handleSizeChange(vIdx, sIdx, "price", e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label style={{ fontSize: '12px' }}>Stock</label>
+                        <input type="number" value={s.stock} onChange={(e) => handleSizeChange(vIdx, sIdx, "stock", e.target.value)} />
+                      </div>
+                      <button type="button" onClick={() => removeSize(vIdx, sIdx)} style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer' }}>×</button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => addSize(vIdx)} style={{ fontSize: '12px', color: '#007bff', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add another size for this color</button>
                 </div>
                 <div className="image-uploader-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
                   {v.images.map((src, i) => (
@@ -585,13 +658,6 @@ export default function ProductEditor({ productId = null }) {
         </div>
 
         <div className="editor-right">
-          <div className="editor-card">
-            <h3>Global Pricing</h3>
-            <div className="form-group">
-              <label>Original Price (Strike-through ₹)</label>
-              <input type="number" value={form.compareAtPrice} onChange={(e) => setForm({ ...form, compareAtPrice: e.target.value })} placeholder="e.g. 999" />
-            </div>
-          </div>
 
           <div className="editor-card">
             <h3>Organization</h3>

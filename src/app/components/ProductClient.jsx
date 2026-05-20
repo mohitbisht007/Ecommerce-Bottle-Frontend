@@ -29,7 +29,9 @@ export default function ProductClient({ initialProduct }) {
   const [engravingSize, setEngravingSize] = useState("2inch");
 
   const [selectedColor, setSelectedColor] = useState(initialProduct.variants[0]?.colorName || "");
-  const [selectedCapacity, setSelectedCapacity] = useState(initialProduct.variants[0]?.capacity || "");
+  const [selectedCapacity, setSelectedCapacity] = useState(
+    initialProduct.variants[0]?.sizes?.[0]?.capacity || ""
+  );
 
   const { addToCart, cartItems, setIsCartOpen } = useCart();
 
@@ -44,9 +46,7 @@ export default function ProductClient({ initialProduct }) {
   if (!product) return <div className="page-loader">Loading...</div>;
 
   const currentVariant = product.variants[selectedVarIdx];
-  const discount = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-    : 0;
+
 
   const handleAddToBag = () => {
     addToCart(
@@ -66,11 +66,17 @@ export default function ProductClient({ initialProduct }) {
     (item) => item._id === product._id && item.color === currentVariant.colorName && item.capacity === selectedCapacity
   );
 
-  const activeVariant = product.variants.find(
-    (v) => v.colorName === selectedColor && v.capacity === selectedCapacity
-  ) || currentVariant;
+  const activeVariant =
+    product.variants.find(
+      (v) => v.colorName === selectedColor
+    ) || currentVariant;
 
-  const variantStock = activeVariant.stock;
+  const selectedSize =
+    activeVariant?.sizes?.find(
+      (s) => s.capacity === selectedCapacity
+    ) || activeVariant?.sizes?.[0];
+
+  const variantStock = selectedSize?.stock || 0;
 
 
   return (
@@ -81,8 +87,8 @@ export default function ProductClient({ initialProduct }) {
         <aside className="gallery-aside">
           <GallerySection
             product={product}
-            discount={discount}
             currentVariant={currentVariant}
+            selectedSize={selectedSize}
             activeImgIdx={activeImgIdx}
             setActiveImgIdx={setActiveImgIdx}
             isCustomizing={isCustomizing}
@@ -98,9 +104,8 @@ export default function ProductClient({ initialProduct }) {
           <ProductInfoHeader
             product={product}
             variantStock={variantStock}
-            discount={discount}
+            selectedSize={selectedSize}
           />
-
 
           <ProductOptions
             product={product}

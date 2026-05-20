@@ -56,7 +56,7 @@ export default async function HomePage() {
 
       < DeliveryRadar />
 
-      <CategoryTray categories={data.categories} />
+      {/* <CategoryTray categories={data.categories} /> */}
 
       {/* 3. Passing pre-fetched products to avoid "loading skeletons" */}
       <CategoryBar

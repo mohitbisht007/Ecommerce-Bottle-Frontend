@@ -2627,7 +2627,15 @@ input[type="password"]::placeholder{letter-spacing:normal}
 ========================= */
 
 .purchase-controls{display:grid;grid-template-columns:120px 1fr;gap:15px;margin-bottom:40px}
-.qty-picker{display:flex;border:1.5px solid #000;border-radius:8px;overflow:hidden}
+.qty-picker{display:flex;border:1.5px solid #000;border-radius:8px;overflow:hidden;align-items: center;}
+.qty-picker span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:40px;
+  font-weight:700;
+  height:100%;
+}
 .qty-picker button{flex:1;border:none;background:#fff;font-size:20px;cursor:pointer}
 .qty-picker input{width:40px;border:none;text-align:center;font-weight:700}
 .btn-add-cart{background:#fff;border:1.5px solid #000;font-weight:800;border-radius:8px;cursor:pointer;height:55px}

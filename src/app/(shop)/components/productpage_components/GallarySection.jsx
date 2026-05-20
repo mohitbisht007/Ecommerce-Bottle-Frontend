@@ -7,11 +7,11 @@ import { toast } from "react-hot-toast";
 
 const getCustomizationRules = (capacity, orientation, engravingSize) => {
     const caps = capacity?.toLowerCase() || "750ml";
-    
+
     // Scale multipliers - Adjusted to make 3inch noticeably "Bold"
     const sizeMultiplier = {
-        "1inch": 0.5,   
-        "2inch": 0.85,   
+        "1inch": 0.5,
+        "2inch": 0.85,
         "3inch": 1.3 // Increased for real impact
     };
     const m = sizeMultiplier[engravingSize] || 0.85;
@@ -35,7 +35,7 @@ const getCustomizationRules = (capacity, orientation, engravingSize) => {
 
 export default function GallerySection({
     product,
-    discount,
+    selectedSize,
     currentVariant,
     activeImgIdx,
     setActiveImgIdx,
@@ -53,13 +53,31 @@ export default function GallerySection({
     const autoPlayRef = useRef(null);
     const { toggleWishlist, isItemWishlisted, wishlistIds } = useWishlist()
 
-    const activeRules = getCustomizationRules(currentVariant?.capacity, orientation, engravingSize);
+    const activeRules = getCustomizationRules(
+        selectedSize?.capacity,
+        orientation,
+        engravingSize
+    );
 
     // 2. Logic for Engraving Color (Black vs White)
     const engravingColor = currentVariant?.engravingColorType === 'dark'
         ? "rgba(0,0,0,0.8)"      // Black font for light bottles
         : "rgba(255,255,255,0.9)";
 
+    const currentPrice =
+        selectedSize?.price || product.price;
+
+    const comparePrice =
+        selectedSize?.compareAtPrice;
+
+    const discount =
+        comparePrice && currentPrice
+            ? Math.round(
+                ((comparePrice - currentPrice) /
+                    comparePrice) *
+                100
+            )
+            : 0;
 
     const handleNext = useCallback(() => {
         setActiveImgIdx((prev) => (prev + 1) % images.length);
