@@ -17,8 +17,7 @@ export default function HeroCarousel({ banners }) {
   return (
     <section className="hero-section">
       <Swiper
-        modules={[Autoplay, Pagination, EffectFade, Navigation]}
-        effect="fade"
+        modules={[Autoplay, Pagination, Navigation]}
         loop={banners.length > 1}
         speed={1000}
         autoplay={{ delay: 2000, disableOnInteraction: true }}

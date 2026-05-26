@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/app/components/ProductCard";
 import { SlidersHorizontal, X, ChevronRight } from "lucide-react";
@@ -12,10 +12,10 @@ const extractAvailableColors = (products) => {
 
   products.forEach(product => {
     product.variants?.forEach(variant => {
-      if (variant.colorName && variant.colorCode) {
+      if (variant.baseColorName && variant.colorCode) {
         // Use colorName as key to avoid duplicates like "Black" appearing twice
-        colorMap.set(variant.colorName, {
-          name: variant.colorName,
+        colorMap.set(variant.baseColorName, {
+          baseColorName: variant.baseColorName,
           hex: variant.colorCode
         });
       }
@@ -97,12 +97,12 @@ const FilterGroups = ({
 
       <div className="swatch-grid-container">
         {availableColors.map((color) => {
-          const isSelected = currentColor.includes(color.name);
+          const isSelected = currentColor.includes(color.baseColorName);
           return (
             <label
-              key={color.name}
+              key={color.baseColorName}
               className={`swatch-wrapper ${isSelected ? "is-selected" : ""}`}
-              title={color.name}
+              title={color.baseColorName}
             >
               <input
                 type="checkbox"
@@ -110,8 +110,8 @@ const FilterGroups = ({
                 checked={isSelected}
                 onChange={() => {
                   const newColors = isSelected
-                    ? currentColor.filter(c => c !== color.name)
-                    : [...currentColor, color.name];
+                    ? currentColor.filter(c => c !== color.baseColorName)
+                    : [...currentColor, color.baseColorName];
                   updateFilter({ color: newColors.join(",") });
                 }}
               />
@@ -123,7 +123,7 @@ const FilterGroups = ({
                   {isSelected && <div className="inner-check" />}
                 </span>
               </div>
-              <span className="swatch-label">{color.name}</span>
+              <span className="swatch-label">{color.baseColorName}</span>
             </label>
           );
         })}
@@ -172,11 +172,18 @@ const FilterGroups = ({
 );
 
 // --- 2. MAIN COMPONENT ---
-export default function ShopClient({ initialProducts, availableCategories, }) {
+export default function ShopClient({
+  initialProducts,
+  availableCategories,
+  totalPages,
+  currentPage,
+  totalProducts }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const productsRef = useRef(null);
+
   const [deliveryData, setDeliveryData] = useState(null);
 
   const [availableColors] = useState(() => extractAvailableColors(initialProducts));
@@ -210,10 +217,28 @@ export default function ShopClient({ initialProducts, availableCategories, }) {
     });
 
     // Ensure we reset to page 1 if you add pagination later
-    if (params.has("page")) params.set("page", "1");
+    if (
+      !Object.keys(filters).includes("page")
+    ) {
+      params.set("page", "1");
+    }
 
     startTransition(() => {
-      router.push(`/shop?${params.toString()}`, { scroll: false });
+
+      router.push(
+        `/shop?${params.toString()}`,
+        { scroll: false }
+      );
+
+      setTimeout(() => {
+
+        productsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+      }, 100);
+
     });
   };
 
@@ -294,7 +319,9 @@ export default function ShopClient({ initialProducts, availableCategories, }) {
           <div className="shop-header-desktop">
             <div className="header-left">
               <h1 className="shop-title">{currentCategory || "All Collections"}</h1>
-              <p className="product-count">{initialProducts.length} Products Found</p>
+              <p className="product-count">
+                {totalProducts} Products Found
+              </p>
             </div>
 
             {/* Moved Sort inside the header for better PC alignment */}
@@ -308,9 +335,41 @@ export default function ShopClient({ initialProducts, availableCategories, }) {
             </div>
           </div>
 
-          <div className={`product-grid ${isPending ? "grid-loading" : ""}`}>
+          <div
+            ref={productsRef}
+            className={`product-grid ${isPending ? "grid-loading" : ""
+              }`}
+          >
             {initialProducts.map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
+          {totalPages > 1 && (
+            <div className="pagination-wrap">
+
+              {Array.from(
+                { length: totalPages },
+                (_, i) => i + 1
+              ).map((page) => (
+
+                <button
+                  key={page}
+
+                  className={`page-btn ${currentPage === page
+                    ? "active"
+                    : ""
+                    }`}
+
+                  onClick={() =>
+                    updateFilter({
+                      page: String(page)
+                    })
+                  }
+                >
+                  {page}
+                </button>
+
+              ))}
+            </div>
+          )}
           <WhatsAppButton />
         </main>
       </div>

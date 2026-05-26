@@ -6,13 +6,11 @@ export async function generateMetadata({ searchParams }) {
 
   return {
     title: category
-      ? `${
-          category.charAt(0).toUpperCase() + category.slice(1)
-        } Water Bottles | BouncyBucket`
+      ? `${category.charAt(0).toUpperCase() + category.slice(1)
+      } Water Bottles | BouncyBucket`
       : "Shop All Collections | BouncyBucket",
-    description: `Browse our ${
-      category || "premium"
-    } collection of eco-friendly water bottles. Filter by price, size, and color.`,
+    description: `Browse our ${category || "premium"
+      } collection of eco-friendly water bottles. Filter by price, size, and color.`,
   };
 }
 
@@ -54,6 +52,13 @@ async function getShopData(searchParams) {
     return {
       products: productsData.items || [],
       categories: categoriesData.categories || [],
+      totalPages: productsData.pages || 1,
+
+      currentPage:
+        Number(productsData.page) || 1,
+
+      totalProducts:
+        productsData.total || 0,
     };
   } catch (error) {
     // 3. Graceful Failure: Build continues even if API is down
@@ -63,9 +68,20 @@ async function getShopData(searchParams) {
 }
 
 export default async function ShopPage({ searchParams }) {
-  const { products, categories } = await getShopData(searchParams);
+  const {
+    products,
+    categories,
+    totalPages,
+    currentPage,
+    totalProducts
+  } = await getShopData(searchParams);
 
   return (
-    <ShopClient initialProducts={products} availableCategories={categories} />
+    <ShopClient
+      initialProducts={products}
+      availableCategories={categories}
+      totalPages={totalPages}
+      currentPage={currentPage}
+      totalProducts={totalProducts} />
   );
 }
