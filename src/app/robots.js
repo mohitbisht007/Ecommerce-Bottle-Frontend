@@ -1,9 +1,15 @@
 export default function robots() {
   return {
     rules: {
-      userAgent: "*",
-      allow: "/",
+      userAgent: '*',
+      allow: '/',
+      disallow: [
+        '/admin',       // Keep crawlers out of your admin dashboard
+        '/admin/*',     // Protect your editor routes
+        '/api/*',       // Don't leak your backend configuration paths
+        '/checkout/*',  // No need to index private cart/checkout paths
+      ],
     },
-    sitemap: "https://www.bouncybucket.com/sitemap.xml",
-  };
+    sitemap: 'https://bouncybucket.com/sitemap.xml',
+  }
 }
