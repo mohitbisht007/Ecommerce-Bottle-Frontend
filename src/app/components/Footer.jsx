@@ -26,10 +26,10 @@ export default function Footer() {
             bottle.
           </p>
           <div className="social-links">
-            <Link href="https://www.instagram.com/bouncy_bucket/" className="social-icon-btn">
+            <Link href="https://www.instagram.com/bouncy_bucket/" target="_blank" className="social-icon-btn">
               <Instagram size={18} />
             </Link>
-            <Link href="https://www.linkedin.com/company/bouncybucket/" className="social-icon-btn">
+            <Link href="https://www.linkedin.com/company/bouncybucket/" target="_blank" className="social-icon-btn">
               <Linkedin size={18} />
             </Link>
             {/* <Link href="#" className="social-icon-btn">
