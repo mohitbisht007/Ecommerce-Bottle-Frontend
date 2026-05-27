@@ -109,7 +109,7 @@ export default function DeliveryRadar() {
         <div className="v-content">
           <div className="hub-tag">
             <Navigation size={14} className="icon-pink" />
-            <span>CENTRAL HUB: OKHLA, NEW DELHI</span>
+            <span>CENTRAL HUB: SECTOR 2, NOIDA</span>
           </div>
           <h3 className="v-headline">Is your zone <span>Express Ready?</span></h3>
           <p className="v-sub">Every bottle is hand-finished and dispatched instantly from our Okhla facility.</p>

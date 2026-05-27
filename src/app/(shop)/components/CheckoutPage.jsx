@@ -375,11 +375,15 @@ export default function CheckoutPage() {
         name: "BouncyBucket",
         order_id: orderData.orderId,
         handler: async (resp) => {
+          console.log("RAZORPAY RESPONSE:", resp)
           const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/verify`, {
             method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(resp),
           });
+
+          const verifyData = await vRes.json();
+          console.log(verifyData)
           if (vRes.ok) {
             clearCart();
             router.push(`/success?orderId=${resp.razorpay_order_id}`);

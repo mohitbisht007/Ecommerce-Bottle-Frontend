@@ -104,7 +104,7 @@ export default function Footer() {
             </p>
 
             <p className="footer-contact-item">
-              📞 +91 9876543210
+              📞 +91 7303189499
             </p>
           </div>
 

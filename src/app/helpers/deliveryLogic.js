@@ -1,5 +1,5 @@
-// Warehouse coordinates (Example: Near Okhla, Delhi)
-const WAREHOUSE_COORDS = { lat: 28.5355, lng: 77.2739 };
+// Warehouse coordinates (Noida)
+const WAREHOUSE_COORDS = { lat: 28.5859, lng: 77.3156 };
 
 export function calculateDistance(lat1, lon1) {
   const lat2 = WAREHOUSE_COORDS.lat;
