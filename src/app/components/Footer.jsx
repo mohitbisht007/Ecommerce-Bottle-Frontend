@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Youtube, Twitter, Send } from "lucide-react";
+import { Instagram, Facebook, Youtube, Twitter, Linkedin, Send } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -26,18 +26,18 @@ export default function Footer() {
             bottle.
           </p>
           <div className="social-links">
-            <Link href="#" className="social-icon-btn">
+            <Link href="https://www.instagram.com/bouncy_bucket/" className="social-icon-btn">
               <Instagram size={18} />
             </Link>
-            <Link href="#" className="social-icon-btn">
-              <Facebook size={18} />
+            <Link href="https://www.linkedin.com/company/bouncybucket/" className="social-icon-btn">
+              <Linkedin size={18} />
             </Link>
-            <Link href="#" className="social-icon-btn">
+            {/* <Link href="#" className="social-icon-btn">
               <Youtube size={18} />
             </Link>
             <Link href="#" className="social-icon-btn">
               <Twitter size={18} />
-            </Link>
+            </Link> */}
           </div>
         </div>
 
