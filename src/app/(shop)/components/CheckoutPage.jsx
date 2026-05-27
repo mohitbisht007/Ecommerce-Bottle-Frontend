@@ -10,7 +10,7 @@ import { MapPin } from "lucide-react";
 
 import {
   X, Check, ShoppingBag, Plus, Trash2, ChevronLeft,
-  ChevronRight, Loader2, Shield, Lock, Truck
+  ChevronRight, Loader2, Shield, Lock, Truck, ArrowRight
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -408,17 +408,121 @@ export default function CheckoutPage() {
 
   if (!hasMounted) return null;
 
-  if (cartItems.length === 0)
-    return (
-      <div className="empty-state-checkout">
-        <ShoppingBag size={80} strokeWidth={0.5} />
-        <h2>{"Your bag is empty"}</h2>
-        <p>{"Quality hydration is just a few clicks away."}</p>
-        <Link href="/shop" className="btn-primary">
-          {"Return to Shop"}
-        </Link>
+ if (cartItems.length === 0)
+  return (
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 py-10 overflow-hidden">
+      
+      {/* Background Glow */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        <div className="absolute top-[-120px] left-[-120px] w-[320px] h-[320px] bg-cyan-200/30 blur-3xl rounded-full"></div>
+        <div className="absolute bottom-[-120px] right-[-120px] w-[320px] h-[320px] bg-pink-200/20 blur-3xl rounded-full"></div>
       </div>
-    );
+
+      <section className="relative w-full max-w-xl">
+        <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-[32px] shadow-[0_20px_80px_rgba(15,23,42,0.08)] overflow-hidden">
+
+          {/* Top Banner */}
+          <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-10 pt-14 pb-20 text-center">
+
+            <div className="mx-auto w-28 h-28 rounded-full bg-white flex items-center justify-center border-[6px] border-slate-100 shadow-2xl">
+              <ShoppingBag
+                size={56}
+                strokeWidth={1.5}
+                className="text-slate-900"
+              />
+            </div>
+
+            <h1 className="mt-6 text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              Your Cart is Empty
+            </h1>
+
+            <p className="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+              Looks like you haven’t added anything yet. Explore our premium collection and discover hydration products crafted for modern lifestyles.
+            </p>
+          </div>
+
+          {/* Bottom Content */}
+          <div className="relative px-5 sm:px-8 pb-8 -mt-10 z-10">
+
+            {/* Feature Box */}
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-lg p-6">
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                    ✨
+                  </div>
+
+                  <h3 className="font-semibold text-slate-900 text-sm">
+                    Premium Design
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Minimal, modern bottles crafted for style and performance.
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                    🚚
+                  </div>
+
+                  <h3 className="font-semibold text-slate-900 text-sm">
+                    Fast Delivery
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Express shipping available across India with secure packaging.
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                    🛡️
+                  </div>
+
+                  <h3 className="font-semibold text-slate-900 text-sm">
+                    Trusted Quality
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Durable stainless steel and leakproof craftsmanship.
+                  </p>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+
+                <Link
+                  href="/shop"
+                  className="flex-1 h-14 rounded-2xl bg-black hover:bg-slate-800 transition-all duration-300 text-white flex items-center justify-center gap-2 font-medium shadow-lg shadow-black/10"
+                >
+                  Explore Collection
+                  <ArrowRight size={18} />
+                </Link>
+
+                <Link
+                  href="/"
+                  className="flex-1 h-14 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 transition-all duration-300 text-slate-900 flex items-center justify-center font-medium"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-8 text-center">
+              <p className="text-xs text-slate-400">
+                Trusted by modern lifestyle enthusiasts across India.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 
   return (
     <div className="checkout-page-root">
