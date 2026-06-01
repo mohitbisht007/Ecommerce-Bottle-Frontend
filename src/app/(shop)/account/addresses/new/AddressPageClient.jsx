@@ -1,6 +1,6 @@
 "use client";
 
-import AddressFormPage from "@/app/(shop)/components/AddressForm";
+import AddressFormPage from "@/components/shop/account/AddressForm";
 
 export default function AddressPageClient() {
   return <AddressFormPage />;

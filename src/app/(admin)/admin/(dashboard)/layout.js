@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import AdminSidebar from "@/app/components/AdminSidebar";
-import AdminTopbar from "@/app/components/AdminTopbar";
+import AdminSidebar from "@/components/admin/layout/AdminSidebar";
+import AdminTopbar from "@/components/admin/layout/AdminTopbar";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();

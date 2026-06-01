@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ProductCard from "@/app/components/ProductCard";
+import ProductCard from "@/components/shop/catalog/ProductCard";
 import { useWishlist } from "@/app/context/WishlistContext";
 import { toast } from "react-hot-toast";
 

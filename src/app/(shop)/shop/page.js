@@ -1,4 +1,4 @@
-import ShopClient from "../components/ShopClient";
+import ShopClient from "@/components/shop/catalog/ShopClient";
 
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams;

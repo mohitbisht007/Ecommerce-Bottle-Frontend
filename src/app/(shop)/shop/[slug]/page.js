@@ -1,4 +1,4 @@
-import ProductClient from "@/app/components/ProductClient";
+import ProductClient from "@/components/shop/product/ProductClient";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {

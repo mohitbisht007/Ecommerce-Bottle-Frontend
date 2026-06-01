@@ -1,11 +1,11 @@
-import AnnouncementBar from "../components/AnnouncementBar";
-import Breadcrumbs from "../components/Breadcrumbs";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
-import OfferModal from "../components/OfferModal";
+import AnnouncementBar from "@/components/shop/layout/AnnouncementBar";
+import Breadcrumbs from "@/components/shop/layout/Breadcrumbs";
+import Footer from "@/components/shop/layout/Footer";
+import Header from "@/components/shop/layout/Header";
+import OfferModal from "@/components/ui/OfferModal";
 import "../globals.css"
-import ModalManager from "../components/ModalManager";
-import DeliveryContextBar from "./components/DeliveryContextBar";
+import ModalManager from "@/components/ui/ModalManager";
+import DeliveryContextBar from "@/components/shop/layout/DeliveryContextBar";
 
 export default async function ShopLayout({ children }) {
   const base = process.env.NEXT_PUBLIC_API_URL;

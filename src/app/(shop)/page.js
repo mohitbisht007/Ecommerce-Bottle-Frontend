@@ -1,10 +1,10 @@
-import CategoryBar from '../components/CategoryBar';
-import HeroCarousel from '../components/HeroCarousel';
-import CategoryTray from '../components/CategoryTray';
-import PriceRangeTray from '../components/PriceRangeTray';
-import ComparisonBanner from './components/ComparisonBanner';
-import DeliveryRadar from './components/DeliveryRadar';
-import WhatsAppButton from './components/WhatsAppButton';
+import CategoryBar from '@/components/shop/home/CategoryBar';
+import HeroCarousel from '@/components/shop/home/HeroCarousel';
+import CategoryTray from '@/components/shop/home/CategoryTray';
+import PriceRangeTray from '@/components/shop/home/PriceRangeTray';
+import ComparisonBanner from '@/components/shop/home/ComparisonBanner';
+import DeliveryRadar from '@/components/shop/home/DeliveryRadar';
+import WhatsAppButton from '@/components/shop/home/WhatsAppButton';
 
 // 1. Metadata remains the same
 export const metadata = {

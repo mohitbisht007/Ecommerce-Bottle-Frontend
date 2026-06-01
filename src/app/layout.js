@@ -1,6 +1,6 @@
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
-import CartSidebar from "./components/CartSidebar";
+import CartSidebar from "@/components/shop/layout/CartSidebar";
 import { Inter } from "next/font/google"; // Optimized Google Font
 import { WishlistProvider } from "./context/WishlistContext";
 import { Toaster } from "react-hot-toast";
