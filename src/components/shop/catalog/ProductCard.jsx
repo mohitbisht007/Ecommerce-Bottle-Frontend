@@ -2,8 +2,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 import { useWishlist } from "@/app/context/WishlistContext";
+import { useCart } from "@/app/context/CartContext";
 
 const IconHeart = ({ filled }) => (
   <svg
@@ -25,10 +27,11 @@ const IconHeart = ({ filled }) => (
 export default function ProductCard({ product }) {
   const [selectedVarIdx, setSelectedVarIdx] = useState(0);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
-  const { toggleWishlist, isItemWishlisted, wishlistIds } = useWishlist()
+  const { toggleWishlist, isItemWishlisted } = useWishlist();
+  const { addToCart } = useCart();
 
   const active = isItemWishlisted(product._id);
-  
+
   const handleWishlistClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -41,12 +44,52 @@ export default function ProductCard({ product }) {
       ? currentVariant.images
       : [product.thumbnail];
 
-  const discount = product.compareAtPrice
+  const selectedSize = currentVariant?.sizes?.[0];
+  const displayPrice = selectedSize?.price ?? product.price;
+  const displayCompareAt =
+    selectedSize?.compareAtPrice ?? product.compareAtPrice;
+
+  const discount = displayCompareAt
     ? Math.round(
-      ((product.compareAtPrice - product.price) / product.compareAtPrice) *
-      100
-    )
+        ((displayCompareAt - displayPrice) / displayCompareAt) * 100
+      )
     : 0;
+
+  const handleQuickAdd = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentVariant) {
+      toast.error("This product is unavailable.");
+      return;
+    }
+
+    if (!selectedSize) {
+      toast.error("No size available — open product to choose options.");
+      return;
+    }
+
+    if (selectedSize.stock <= 0) {
+      toast.error("Out of stock for this variant.");
+      return;
+    }
+
+    const color =
+      currentVariant.colorName || currentVariant.baseColorName || "";
+
+    addToCart(
+      {
+        ...product,
+        price: selectedSize.price,
+        compareAtPrice: selectedSize.compareAtPrice ?? product.compareAtPrice,
+      },
+      1,
+      color,
+      selectedSize.capacity
+    );
+
+    toast.success(`${product.title} added to your bag`);
+  };
 
   return (
     <div className="luxury-card">
@@ -78,7 +121,14 @@ export default function ProductCard({ product }) {
         </Link>
 
         {/* Hover-only Quick Add (Optional touch of luxury) */}
-        <button className="quick-add-btn hide-mobile">Quick Add +</button>
+        <button
+          type="button"
+          className="quick-add-btn hide-mobile"
+          onClick={handleQuickAdd}
+          aria-label={`Quick add ${product.title} to bag`}
+        >
+          Quick Add +
+        </button>
 
         {/* Dynamic Image Indicators */}
         {displayImages.length > 1 && (
@@ -118,10 +168,10 @@ export default function ProductCard({ product }) {
         </Link>
 
         <div className="price-box">
-          <span className="price-main">₹{product.price.toLocaleString()}</span>
-          {product.compareAtPrice && (
+          <span className="price-main">₹{displayPrice.toLocaleString()}</span>
+          {displayCompareAt && displayCompareAt > displayPrice && (
             <span className="price-strike">
-              ₹{product.compareAtPrice.toLocaleString()}
+              ₹{displayCompareAt.toLocaleString()}
             </span>
           )}
         </div>

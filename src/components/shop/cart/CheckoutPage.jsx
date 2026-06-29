@@ -308,24 +308,104 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleContinueToPayment = (e) => {
+  const saveAddress = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) return null;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/add-address`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `JWT ${token}`,
+      },
+      body: JSON.stringify({
+        name: newAddr.fullName,
+        email: userEmail,
+        number: newAddr.phone,
+        street: newAddr.addressLine,
+        city: newAddr.city,
+        state: newAddr.state,
+        zip: newAddr.pincode,
+        landmark: "",
+        isDefault: false,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Unable to save address");
+  }
+
+  return await res.json();
+};
+
+  const handleContinueToPayment = async  (e) => {
     if (e) e.preventDefault();
 
     if (isAddingAddress) {
-      const manualAddress = {
+
+    const token = localStorage.getItem("token");
+
+    // Logged in user
+    if (token) {
+
+        try {
+
+            await saveAddress();
+
+            await fetchAddresses(token);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/me`,
+                {
+                    headers: {
+                        Authorization: `JWT ${token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+
+            const addresses = data.user.addresses;
+
+            const latest = addresses[addresses.length - 1];
+
+            setSavedAddresses(addresses);
+
+            setSelectedAddressId(latest._id);
+
+            setIsAddingAddress(false);
+
+            setStep(3);
+
+            return;
+
+        } catch (err) {
+            alert(err.message);
+            return;
+        }
+    }
+
+    // Guest Checkout
+
+    const manualAddress = {
         name: newAddr.fullName,
         number: newAddr.phone,
         street: newAddr.addressLine,
         city: newAddr.city,
         zip: newAddr.pincode,
         state: newAddr.state,
-      };
-      setTemporaryGuestAddress(manualAddress);
-      setStep(3);
-    } else {
-      if (selectedAddressId) setStep(3);
-      else alert("Please select or add an address");
-    }
+    };
+
+    setTemporaryGuestAddress(manualAddress);
+
+    setStep(3);
+
+    return;
+}
   };
 
   const handleRazorpay = async () => {
