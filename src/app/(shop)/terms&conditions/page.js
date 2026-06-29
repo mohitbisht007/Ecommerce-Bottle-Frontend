@@ -135,7 +135,7 @@ export default function TermsPage() {
             <p className="text-slate-600">
               For any questions regarding these Terms, you can contact us at: 
               <br />
-              Email: support@bouncybucket.com
+              Email: sales@bouncybucket.com
             </p>
           </section>
 

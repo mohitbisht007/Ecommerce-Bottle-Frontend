@@ -57,7 +57,7 @@ export default function ShippingPage() {
               1. Order Processing
             </h4>
             <p className="text-slate-600">
-              Orders are processed within 24 hours of placement. Orders placed on weekends or public holidays will be processed on the next working day.
+              Orders are processed within 24 hours of placement.
             </p>
           </div>
 
@@ -118,7 +118,7 @@ export default function ShippingPage() {
             </h4>
             <p className="text-slate-600">
               For any shipping-related queries, contact us at: <br />
-              <strong>support@bouncybucket.com</strong>
+              <strong>sales@bouncybucket.com</strong>
             </p>
           </div>
 

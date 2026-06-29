@@ -101,7 +101,7 @@ export default function ReturnsPage() {
             </h4>
             <p className="text-slate-600 leading-relaxed">
               For any return or refund requests, contact us at: <br />
-              <strong>support@bouncybucket.com</strong>
+              <strong>sales@bouncybucket.com</strong>
             </p>
           </div>
 

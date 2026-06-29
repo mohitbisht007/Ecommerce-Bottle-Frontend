@@ -143,7 +143,7 @@ export default function SuccessPage() {
               <p className="text-xs text-slate-400">
                 Need help? Contact us anytime at{" "}
                 <span className="font-medium text-slate-600">
-                  support@bouncybucket.com
+                  sales@bouncybucket.com
                 </span>
               </p>
             </div>

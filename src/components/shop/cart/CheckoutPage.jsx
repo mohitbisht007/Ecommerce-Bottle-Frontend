@@ -405,7 +405,11 @@ export default function CheckoutPage() {
     setStep(3);
 
     return;
-}
+} if (selectedAddressId) {
+        setStep(3);
+    } else {
+        alert("Please select an address.");
+    }
   };
 
   const handleRazorpay = async () => {

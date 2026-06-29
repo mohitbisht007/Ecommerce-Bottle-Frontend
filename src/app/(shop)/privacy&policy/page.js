@@ -56,7 +56,7 @@ export default function PrivacyPolicy() {
     },
     {
       title: "14. Contact Us",
-      content: "If you have any questions about this Privacy Policy or your data, you can contact us at: support@bouncybucket.com"
+      content: "If you have any questions about this Privacy Policy or your data, you can contact us at: sales@bouncybucket.com"
     }
   ];
 

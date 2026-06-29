@@ -67,9 +67,9 @@ export default function Footer() {
             <li>
               <Link href="/track-order">Track Order</Link>
             </li>
-            <li>
+            {/* <li>
               <Link href="/faq">Common Questions</Link>
-            </li>
+            </li> */}
             <li>
               <Link href="/shipping-details">Shipping Info</Link>
             </li>
@@ -96,11 +96,11 @@ export default function Footer() {
             <h4>Get in Touch</h4>
 
             <p className="footer-contact-item">
-              📍 Cabin No. 8, B-135, Sector-2, Noida, UP, 201301
+              📍 UGF, Flat No. 2, Plot E-4, Hanuman Vihar, Barola, Noida, UP, 201301
             </p>
 
             <p className="footer-contact-item">
-              📧 support@bouncybucket.com
+              📧 sales@bouncybucket.com
             </p>
 
             <p className="footer-contact-item">
