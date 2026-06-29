@@ -10,7 +10,7 @@ export const CartProvider = ({ children }) => {
 
     // 1. Load cart on initial mount
     useEffect(() => {
-        const savedCart = localStorage.getItem("cart");
+        const savedCart = localStorage.getItem("cart")
         if (savedCart) {
             try {
                 setCartItems(JSON.parse(savedCart));
