@@ -5,6 +5,7 @@ import PriceRangeTray from '@/components/shop/home/PriceRangeTray';
 import ComparisonBanner from '@/components/shop/home/ComparisonBanner';
 import DeliveryRadar from '@/components/shop/home/DeliveryRadar';
 import WhatsAppButton from '@/components/shop/home/WhatsAppButton';
+import WatchAndBuy from '@/components/shop/layout/WatchAndBuy';
 
 // 1. Metadata remains the same
 export const metadata = {
@@ -72,6 +73,8 @@ export default async function HomePage() {
         products={data.newArrivals}
         query="sort=newest"
       />
+
+      <WatchAndBuy/>
 
       <PriceRangeTray />
       <WhatsAppButton />

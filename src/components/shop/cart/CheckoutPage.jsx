@@ -23,6 +23,7 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [confirmingOrder, setConfirmingOrder] = useState(false);
 
   // Holds guest address locally until the "Pay" button is clicked
   const [temporaryGuestAddress, setTemporaryGuestAddress] = useState(null);
@@ -183,6 +184,22 @@ export default function CheckoutPage() {
       fetchAddresses(token);
     }
   }, []);
+
+  useEffect(() => {
+  if (!confirmingOrder) return;
+
+  window.history.pushState(null, "", window.location.href);
+
+  const handlePopState = () => {
+    window.history.pushState(null, "", window.location.href);
+  };
+
+  window.addEventListener("popstate", handlePopState);
+
+  return () => {
+    window.removeEventListener("popstate", handlePopState);
+  };
+}, [confirmingOrder]);
 
 
   const getAuthHeaders = () => {
@@ -459,7 +476,7 @@ export default function CheckoutPage() {
         name: "BouncyBucket",
         order_id: orderData.orderId,
         handler: async (resp) => {
-          console.log("RAZORPAY RESPONSE:", resp)
+          setConfirmingOrder(true);
           const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/verify`, {
             method: "POST",
             headers: getAuthHeaders(),
@@ -467,7 +484,6 @@ export default function CheckoutPage() {
           });
 
           const verifyData = await vRes.json();
-          console.log(verifyData)
           if (vRes.ok) {
             clearCart();
             router.push(`/success?orderId=${resp.razorpay_order_id}`);
@@ -484,6 +500,7 @@ export default function CheckoutPage() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (e) {
+      setConfirmingOrder(false);
       alert(e.message);
     } finally {
       setLoading(false);
@@ -491,6 +508,62 @@ export default function CheckoutPage() {
   };
 
   if (!hasMounted) return null;
+
+  if (confirmingOrder) {
+  return (
+    <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center px-6">
+      <div className="max-w-md text-center">
+
+        <div className="mx-auto w-20 h-20 rounded-full border-4 border-pink-500 border-t-transparent animate-spin"></div>
+
+        <h2 className="mt-10 text-3xl font-bold text-slate-900">
+          Confirming Your Order
+        </h2>
+
+        <p className="mt-4 text-slate-600 leading-7">
+          Please don't refresh, close this window or press the back button.
+        </p>
+
+        <div className="mt-10 space-y-3">
+
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+            <span className="text-slate-700">
+              Verifying secure payment...
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+            <span className="text-slate-700">
+              Saving your order...
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+            <span className="text-slate-700">
+              Generating invoice...
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+            <span className="text-slate-700">
+              Sending confirmation email...
+            </span>
+          </div>
+
+        </div>
+
+        <div className="mt-10 text-sm text-slate-500">
+          This usually takes 5–15 seconds.
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
  if (cartItems.length === 0)
   return (
