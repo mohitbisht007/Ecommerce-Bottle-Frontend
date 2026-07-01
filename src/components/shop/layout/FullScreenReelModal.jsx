@@ -4,17 +4,24 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { X, ShoppingBag, ChevronUp, ChevronDown, Star, ExternalLink } from "lucide-react";
+import { X, ShoppingBag, Star, ExternalLink, Plus, Minus, Trash2 } from "lucide-react";
+import { useCart } from "@/app/context/CartContext";
 
-export default function FullScreenReelModal({ reels, initialIdx, onClose, onAddToCart, convertToSlug }) {
+export default function FullScreenReelModal({ reels, initialIdx, onClose, convertToSlug }) {
   const [currentIdx, setCurrentIdx] = useState(initialIdx);
+  const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
   const videoRefs = useRef([]);
+  
+  const scrollTimeout = useRef(null);
+  const touchStartY = useRef(0);
+  const isTransitioning = useRef(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = "unset"; };
   }, []);
 
+  // Manage playback streams based on current indexing parameters
   useEffect(() => {
     videoRefs.current.forEach((video, idx) => {
       if (!video) return;
@@ -27,25 +34,82 @@ export default function FullScreenReelModal({ reels, initialIdx, onClose, onAddT
     });
   }, [currentIdx]);
 
-  const handleNext = () => currentIdx < reels.length - 1 && setCurrentIdx(currentIdx + 1);
-  const handlePrev = () => currentIdx > 0 && setCurrentIdx(currentIdx - 1);
+  const changeReelSmoothly = (newIdx) => {
+    if (newIdx < 0 || newIdx >= reels.length || isTransitioning.current) return;
+    isTransitioning.current = true;
+    setCurrentIdx(newIdx);
+    
+    setTimeout(() => {
+      isTransitioning.current = false;
+    }, 500); // Matches smooth slide css transition delay timing
+  };
+
+  const handleNext = () => changeReelSmoothly(currentIdx + 1);
+  const handlePrev = () => changeReelSmoothly(currentIdx - 1);
+
+  // Smooth Mouse Wheel Trackpad Interceptor
+  const handleWheel = (e) => {
+    e.preventDefault();
+    if (scrollTimeout.current || isTransitioning.current) return;
+
+    scrollTimeout.current = setTimeout(() => {
+      scrollTimeout.current = null;
+    }, 600);
+
+    if (e.deltaY > 40) {
+      handleNext();
+    } else if (e.deltaY < -40) {
+      handlePrev();
+    }
+  };
+
+  // Mobile Touch Swipe Trackers
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (isTransitioning.current) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const distance = touchStartY.current - touchEndY;
+
+    if (distance > 70) {
+      handleNext(); 
+    } else if (distance < -70) {
+      handlePrev(); 
+    }
+  };
 
   const activeReel = reels[currentIdx];
   const product = activeReel.linkedProduct || {};
   const productImg = product.thumbnail || product.image || "/placeholder.jpg";
   const productSlug = convertToSlug(product.title);
 
+  const cartIndex = cartItems.findIndex(item => item._id === product._id);
+  const existingItem = cartIndex !== -1 ? cartItems[cartIndex] : null;
+
+  const executeAdd = (e) => {
+    e.preventDefault();
+    const color = product.variants?.[0]?.colorName || "Default";
+    const capacity = product.variants?.[0]?.capacities?.[0]?.capacity || "Standard";
+    addToCart(product, 1, color, capacity);
+  };
+
   const modalContent = (
-    <div className="fixed inset-0 w-screen h-screen z-[99999] bg-slate-950 flex flex-col justify-between text-white overflow-hidden animate-fade-in font-sans">
-      
-      {/* Immersive HUD Header Control bar */}
+    <div 
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="fixed inset-0 w-screen h-screen z-[99999] bg-slate-950 flex flex-col justify-between text-white overflow-hidden font-sans touch-none"
+    >
+      {/* Immersive Controls Top Bar */}
       <header className="w-full px-6 py-4 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-50 absolute top-0 left-0">
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/30 px-2.5 py-1 rounded-md">
             Bouncy Bucket TV
           </span>
           <span className="text-xs font-mono text-slate-300 font-medium hidden sm:inline">
-            Reel {currentIdx + 1} of {reels.length}
+            Reel {currentIdx + 1} of {reels.length} &bull; Swipe / Scroll View
           </span>
         </div>
 
@@ -57,66 +121,81 @@ export default function FullScreenReelModal({ reels, initialIdx, onClose, onAddT
         </button>
       </header>
 
-      {/* Main Structural Display Layout */}
+      {/* Main Structural Layout Core */}
       <div className="w-full h-full flex flex-col md:flex-row items-center justify-center max-w-6xl mx-auto overflow-hidden relative">
         
-        {/* Core Media Window Node */}
+        {/* Left Side Viewport Container Window */}
         <div className="relative w-full h-full md:h-[85vh] md:max-w-[400px] bg-black md:rounded-2xl border border-slate-900 shadow-2xl flex items-center justify-center overflow-hidden">
-          <video
-            ref={el => videoRefs.current[currentIdx] = el}
-            src={activeReel.videoUrl}
-            loop
-            playsInline
-            controls
-            controlsList="nodownload nofullscreen noremoteplayback"
-            className="w-full h-full object-cover"
-          />
-
-          {/* Quick Click Video Viewport Switch Arrows */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3.5 z-40">
-            <button _id="prev-btn" disabled={currentIdx === 0} onClick={handlePrev} className="p-2.5 bg-black/60 border border-white/10 disabled:opacity-20 rounded-full hover:bg-slate-900 transition text-white shadow-xl">
-              <ChevronUp size={16} />
-            </button>
-            <button _id="next-btn" disabled={currentIdx === reels.length - 1} onClick={handleNext} className="p-2.5 bg-black/60 border border-white/10 disabled:opacity-20 rounded-full hover:bg-slate-900 transition text-white shadow-xl">
-              <ChevronDown size={16} />
-            </button>
+          
+          {/* VERTICAL SLIDING TRACK CAROUSEL CORE RUNNER */}
+          <div 
+            className="w-full h-full flex flex-col transition-transform duration-500 ease-out"
+            style={{ transform: `translateY(-${currentIdx * 100}%)` }}
+          >
+            {reels.map((reel, rIdx) => (
+              <div key={reel._id} className="w-full h-full flex-shrink-0 relative flex items-center justify-center">
+                <video
+                  ref={el => videoRefs.current[rIdx] = el}
+                  src={reel.videoUrl}
+                  loop
+                  playsInline
+                  controls={rIdx === currentIdx}
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
           </div>
 
-          {/* MOBILE ONLY LAYER: Floating Product Deck over Video Canvas Bottom */}
-          <div className="absolute bottom-6 inset-x-4 bg-slate-950/85 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl flex items-center gap-3 md:hidden z-30 animate-scale-up">
-            <div className="relative w-12 h-12 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
-              <Image src={productImg} alt={product.title} fill sizes="48px" className="object-cover" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h4 className="text-xs font-black text-white truncate tracking-wide">{product.title}</h4>
-              <div className="text-xs font-black text-emerald-400 mt-0.5">₹{product.price}</div>
+          {/* MOBILE ONLY FLOATING DETAILS DECK SHEET LAYER */}
+          <div className="absolute bottom-6 inset-x-4 bg-slate-950/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl flex flex-col items-center text-center md:hidden z-30 space-y-3">
+            <div className="flex items-center gap-3 w-full border-b border-white/5 pb-2">
+              <div className="relative w-10 h-10 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                <Image src={productImg} alt="" fill sizes="40px" className="object-cover" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <h4 className="text-xs font-black text-white truncate uppercase tracking-wide">{product.title}</h4>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5 font-bold">
+                  <span className="text-amber-400 flex"><Star size={10} fill="currentColor" /></span>
+                  <span>{product.rating || "4.8"}</span>
+                </div>
+              </div>
+              <div className="text-sm font-black text-emerald-400">₹{product.price}</div>
             </div>
 
-            <div className="flex gap-1.5">
-              <button 
-                onClick={(e) => onAddToCart(e, product)}
-                className="p-2.5 bg-emerald-500 text-slate-950 rounded-lg shadow-md active:scale-90 transition"
-              >
-                <ShoppingBag size={14} strokeWidth={2.5} />
-              </button>
+            <div className="w-full grid grid-cols-5 gap-2">
+              <div className="col-span-3 w-full">
+                {existingItem ? (
+                  <div className="w-full bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between p-1">
+                    <button onClick={() => updateQuantity(cartIndex, -1)} className="p-1.5 text-slate-400 hover:text-white transition"><Minus size={12} /></button>
+                    <span className="text-xs font-black text-white">{existingItem.quantity} Pcs</span>
+                    <button onClick={() => updateQuantity(cartIndex, 1)} className="p-1.5 text-slate-400 hover:text-white transition"><Plus size={12} /></button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={executeAdd}
+                    className="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-1"
+                  >
+                    <ShoppingBag size={12} strokeWidth={2.5} /> Add to Bag
+                  </button>
+                )}
+              </div>
               <Link 
                 href={`/shop/${productSlug}`}
                 onClick={onClose}
-                className="p-2.5 bg-white/10 border border-white/10 rounded-lg text-white"
+                className="col-span-2 bg-white/10 border border-white/15 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1"
               >
-                <ExternalLink size={14} />
+                Specs <ExternalLink size={12} />
               </Link>
             </div>
           </div>
         </div>
 
-        {/* DESKTOP ONLY SIDEBAR PANEL DISPLAY */}
-        <div className="hidden md:flex w-[340px] bg-slate-900/60 border border-slate-800 backdrop-blur-md rounded-r-2xl h-[85vh] flex-col justify-between p-6 shadow-2xl border-l-0">
+        {/* DESKTOP SIDEBAR PANEL DISPLAY */}
+        <div className="hidden md:flex w-[340px] bg-slate-900/60 border border-slate-800 backdrop-blur-md rounded-r-2xl h-[85vh] flex flex-col justify-between p-6 shadow-2xl border-l-0">
           <div className="space-y-6 text-center">
-            {/* Centered Desktop Image Target Frame Showcase */}
             <div className="relative w-32 h-32 bg-white rounded-2xl overflow-hidden shadow-xl border border-slate-800 mx-auto mt-4">
-              <Image src={productImg} alt={product.title} fill sizes="128px" className="object-cover" priority />
+              <Image src={productImg} alt="" fill sizes="128px" className="object-cover" priority />
             </div>
 
             <div className="space-y-2">
@@ -133,18 +212,31 @@ export default function FullScreenReelModal({ reels, initialIdx, onClose, onAddT
             </div>
 
             <div className="bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between text-xs">
-              <span className="font-bold tracking-wider text-slate-500 uppercase">Inclusive Price</span>
+              <span className="font-bold tracking-wider text-slate-500 uppercase">Price:</span>
               <span className="text-xl font-black text-emerald-400">₹{product.price}</span>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <button 
-              onClick={(e) => onAddToCart(e, product)}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition duration-200 shadow-md active:scale-98"
-            >
-              <ShoppingBag size={14} strokeWidth={2.5} /> Add To Cart
-            </button>
+          <div className="space-y-2.5">
+            {existingItem ? (
+              <div className="space-y-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                <span className="block text-[10px] text-center uppercase tracking-widest text-slate-500 font-bold">Modify Quantity</span>
+                <div className="flex items-center justify-between">
+                  <button onClick={() => updateQuantity(cartIndex, -1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition"><Minus size={14} /></button>
+                  <span className="text-sm font-black text-white px-4">{existingItem.quantity} Selected</span>
+                  <button onClick={() => updateQuantity(cartIndex, 1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition"><Plus size={14} /></button>
+                  <button onClick={() => removeFromCart(cartIndex)} className="p-2 bg-rose-950/40 border border-rose-900/30 text-rose-400 hover:bg-rose-900 hover:text-white rounded-lg transition"><Trash2 size={14} /></button>
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={executeAdd}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition duration-200 shadow-md"
+              >
+                <ShoppingBag size={14} strokeWidth={2.5} /> Add To Cart
+              </button>
+            )}
+            
             <Link 
               href={`/shop/${productSlug}`}
               onClick={onClose}
@@ -156,10 +248,6 @@ export default function FullScreenReelModal({ reels, initialIdx, onClose, onAddT
         </div>
 
       </div>
-
-      <footer className="w-full text-center py-4 bg-slate-950 text-[9px] text-slate-600 font-bold tracking-widest uppercase border-t border-slate-900/30 absolute bottom-0 left-0 hidden md:block">
-        Bouncy Bucket Operations System &bull; Live Checkout Layer
-      </footer>
     </div>
   );
 
