@@ -54,7 +54,13 @@ export default async function HomePage() {
     <main>
       {/* 2. H1 is critical for SEO. Usually placed in the Hero */}
       <HeroCarousel banners={data.banners} />
+      <CategoryBar
+        title="New Arrivals"
+        products={data.newArrivals}
+        query="sort=newest"
+      />
 
+      <ComparisonBanner />
       < DeliveryRadar />
 
       {/* <CategoryTray categories={data.categories} /> */}
@@ -65,18 +71,8 @@ export default async function HomePage() {
         products={data.steelBottles}
         query="category=steel"
       />
-
-      <ComparisonBanner />
-
-      <CategoryBar
-        title="New Arrivals"
-        products={data.newArrivals}
-        query="sort=newest"
-      />
-
-      <WatchAndBuy/>
-
       <PriceRangeTray />
+      <WatchAndBuy />
       <WhatsAppButton />
     </main>
   );

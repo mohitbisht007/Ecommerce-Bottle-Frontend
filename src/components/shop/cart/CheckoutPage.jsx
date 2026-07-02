@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { calculateDistance } from "@/app/helpers/deliveryLogic";
 import { MapPin } from "lucide-react";
+import toast from "react-hot-toast";
 
 import {
   X, Check, ShoppingBag, Plus, Trash2, ChevronLeft,
@@ -467,27 +468,41 @@ export default function CheckoutPage() {
       });
 
       const orderData = await res.json();
-      if (!res.ok) throw new Error(orderData.message || "Checkout failed");
+      if (!res.ok) throw new Error(orderData.error || orderData.message || "Checkout failed");
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
-        currency: "INR",
+        currency: orderData.currency || "INR",
         name: "BouncyBucket",
-        order_id: orderData.orderId,
+        order_id: orderData.order_id || orderData.orderId,
         handler: async (resp) => {
           setConfirmingOrder(true);
-          const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/verify`, {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify(resp),
-          });
+          try {
+            const vRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/verify`, {
+              method: "POST",
+              headers: getAuthHeaders(),
+              body: JSON.stringify(resp),
+            });
 
-          const verifyData = await vRes.json();
-          if (vRes.ok) {
-            clearCart();
-            router.push(`/success?orderId=${resp.razorpay_order_id}`);
+            const verifyData = await vRes.json();
+            if (vRes.ok) {
+              clearCart();
+              router.push(`/success?orderId=${resp.razorpay_order_id}`);
+            } else {
+              setConfirmingOrder(false);
+              toast.error(verifyData.message || verifyData.error || "Payment verification failed");
+            }
+          } catch {
+            setConfirmingOrder(false);
+            toast.error("Payment verification failed. Please contact support.");
           }
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            toast.error("Payment cancelled");
+          },
         },
         prefill: {
           contact: addressToSend.number,
@@ -498,10 +513,15 @@ export default function CheckoutPage() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response) => {
+        setConfirmingOrder(false);
+        setLoading(false);
+        toast.error(response.error?.description || "Payment failed. Please try again.");
+      });
       rzp.open();
     } catch (e) {
       setConfirmingOrder(false);
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setLoading(false);
     }
