@@ -25,9 +25,9 @@ export default async function ShopLayout({ children }) {
 
   return (
     <>
-      <AnnouncementBar />
       <Header initialCategories={categories} />
-      < DeliveryContextBar />
+      <AnnouncementBar />
+      {/* < DeliveryContextBar /> */}
       <Breadcrumbs />
       <main style={{ minHeight: '80vh' }}>
         <ModalManager/>

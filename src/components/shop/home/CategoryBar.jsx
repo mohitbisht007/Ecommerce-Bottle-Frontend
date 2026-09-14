@@ -1,57 +1,95 @@
-// 1. REMOVED "use client" - it's now a faster Server Component
-import ProductCard from "@/components/shop/catalog/ProductCard";
+"use client";
+
+import { useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { FreeMode } from "swiper/modules";
 import Link from "next/link";
+import ProductCard from "@/components/shop/catalog/ProductCard";
+
+import "swiper/css";
+import "swiper/css/free-mode";
 
 export default function CategoryBar({ title, products, query }) {
+  const swiperRef = useRef(null);
+
   if (!products || products.length === 0) return null;
+
+  const headingId = `header-${title
+    .replace(/\s+/g, "-")
+    .toLowerCase()}`;
 
   return (
     <section
-      className="category-row-section"
-      aria-labelledby={`header-${title.replace(/\s+/g, "-").toLowerCase()}`}
+      aria-labelledby={headingId}
+      className="w-full overflow-hidden bg-[#b9c9dc] py-10 sm:py-12 md:py-14"
     >
-      <div className="container">
-        <div className="category-row-header">
-          <div className="header-text-group">
-            {/* 1. Added a decorative sub-tag for a premium feel */}
-            <span className="header-pre-title">Premium Collection</span>
+      <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-10">
+        {/* ---------- HEADER ---------- */}
+        <div className="mb-8 flex items-end justify-between gap-4 sm:mb-10">
+          <div className="flex items-center gap-5">
             <h2
-              id={`header-${title.replace(/\s+/g, "-").toLowerCase()}`}
-              className="header-main-title"
+              id={headingId}
+              className="font-sans text-[22px] font-black italic uppercase tracking-[0.18em] text-[#26384b] sm:text-[26px] md:text-[30px]"
             >
               {title}
             </h2>
-          </div>
 
-          <Link
-            href={`/shop?${query}`}
-            className="modern-view-all"
-            aria-label={`View all products in ${title}`}
-          >
-            <span className="link-text">Explore All</span>
-            <span className="link-arrow">
+            <button
+              type="button"
+              onClick={() => swiperRef.current?.slideNext()}
+              aria-label={`Next ${title} products`}
+              className="mb-1 hidden shrink-0 items-center justify-center text-[#26384b] transition-transform duration-200 hover:translate-x-2 sm:flex"
+            >
               <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
+                className="h-5 w-12"
+                viewBox="0 0 48 20"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
+                <line x1="0" y1="10" x2="42" y2="10" />
+                <polyline points="34 3 42 10 34 17" />
               </svg>
-            </span>
+            </button>
+          </div>
+
+          <Link
+            href={`/shop?${query || ""}`}
+            aria-label={`View all products in ${title}`}
+            className="shrink-0 border-b border-[#26384b] pb-1 text-[9px] font-bold uppercase tracking-[0.08em] text-[#26384b] transition-opacity duration-200 hover:opacity-60 sm:text-[10px]"
+          >
+            View All
           </Link>
         </div>
 
-        <div className="products-grid">
+        {/* ---------- PRODUCT SLIDER ---------- */}
+        <Swiper
+          modules={[FreeMode]}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper;
+          }}
+          slidesPerView="auto"
+          spaceBetween={14}
+          freeMode={{
+            enabled: true,
+            sticky: true,
+            momentumBounce: false,
+          }}
+          grabCursor
+          watchSlidesProgress
+          className="!overflow-visible !py-2"
+        >
           {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
+            <SwiperSlide
+              key={product._id}
+              className="!w-[180px] sm:!w-[205px] md:!w-[220px] lg:!w-[235px]"
+            >
+              <ProductCard product={product} />
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
       </div>
     </section>
   );

@@ -51,7 +51,7 @@ export default async function HomePage() {
   const data = await getHomeData();
 
   return (
-    <main>
+    <main className='bg-[#b9c9dc]'>
       {/* 2. H1 is critical for SEO. Usually placed in the Hero */}
       <HeroCarousel banners={data.banners} />
       <CategoryBar
