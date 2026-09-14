@@ -28,11 +28,10 @@ export default function ProductOptions({
             <button
               key={`${product._id}-${v.colorName}`}
 
-              className={`swatch-ring ${
-                selectedVarIdx === i
+              className={`swatch-ring ${selectedVarIdx === i
                   ? "active"
                   : ""
-              }`}
+                }`}
 
               style={{
                 "--swatch-hex": v.colorCode
@@ -50,6 +49,11 @@ export default function ProductOptions({
                     v.sizes[0].capacity
                   );
                 }
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
 
                 setActiveImgIdx(0);
               }}
@@ -82,16 +86,14 @@ export default function ProductOptions({
                 <button
                   key={`size-${sizeObj.capacity}-${index}`}
 
-                  className={`size-card ${
-                    selectedCapacity ===
-                    sizeObj.capacity
+                  className={`size-card ${selectedCapacity ===
+                      sizeObj.capacity
                       ? "active"
                       : ""
-                  } ${
-                    isOutOfStock
+                    } ${isOutOfStock
                       ? "disabled"
                       : ""
-                  }`}
+                    }`}
 
                   onClick={() =>
                     !isOutOfStock &&
@@ -111,8 +113,8 @@ export default function ProductOptions({
                     {isOutOfStock
                       ? "Out of Stock"
                       : vStock <= 5
-                      ? `Only ${vStock} left`
-                      : "Available"}
+                        ? `Only ${vStock} left`
+                        : "Available"}
                   </span>
 
                 </button>
