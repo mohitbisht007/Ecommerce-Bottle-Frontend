@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useCart } from "@/app/context/CartContext";
+import { useCart, getCartItemImage } from "@/app/context/CartContext";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
@@ -747,7 +747,7 @@ export default function CheckoutPage() {
                     <div key={i} className="checkout-item">
                       <div className="img-holder">
                         <Image
-                          src={item.variants?.[0]?.images?.[0] || item.image}
+                          src={getCartItemImage(item)}
                           width={100}
                           height={100}
                           alt={item.title}
@@ -1022,7 +1022,7 @@ export default function CheckoutPage() {
                   <div key={idx} className="mini-item">
                     <div className="thumb">
                       <Image
-                        src={item.variants?.[0]?.images?.[0] || item.image}
+                        src={getCartItemImage(item)}
                         width={60}
                         height={60}
                         alt={item.title}

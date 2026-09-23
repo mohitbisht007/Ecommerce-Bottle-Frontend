@@ -1,5 +1,5 @@
 "use client";
-import { useCart } from "@/app/context/CartContext";
+import { useCart, getCartItemImage } from "@/app/context/CartContext";
 import Link from "next/link";
 import Image from "next/image"; // Changed: Use Next.js Image
 import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
@@ -62,7 +62,7 @@ export default function CartSidebar() {
                                     <div className="cart-item-img">
                                         {/* Updated: Next.js Optimized Image */}
                                         <Image 
-                                            src={item.variants?.[0]?.images?.[0] || '/placeholder.png'} 
+                                            src={getCartItemImage(item)} 
                                             alt={item.title} 
                                             width={80} 
                                             height={80} 

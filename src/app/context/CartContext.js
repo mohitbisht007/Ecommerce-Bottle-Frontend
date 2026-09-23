@@ -3,6 +3,30 @@ import { createContext, useContext, useState, useEffect, useRef } from "react";
 
 const CartContext = createContext();
 
+export function getCartItemImage(item) {
+    if (!item) return "/placeholder.png";
+
+    const color = String(item.color || "").toLowerCase().trim();
+    const variants = item.variants || [];
+    const matched = color
+        ? variants.find((v) => {
+            const names = [v.colorName, v.baseColorName]
+                .filter(Boolean)
+                .map((n) => String(n).toLowerCase().trim());
+            return names.includes(color);
+        })
+        : null;
+
+    return (
+        matched?.images?.[0] ||
+        matched?.image ||
+        item.image ||
+        item.thumbnail ||
+        variants[0]?.images?.[0] ||
+        "/placeholder.png"
+    );
+}
+
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
@@ -43,7 +67,8 @@ export const CartProvider = ({ children }) => {
                         : item
                 );
             }
-            return [...prev, { ...product, quantity, color, capacity }];
+            const image = getCartItemImage({ ...product, color, capacity });
+            return [...prev, { ...product, quantity, color, capacity, image }];
         });
         setIsCartOpen(true);
     };
