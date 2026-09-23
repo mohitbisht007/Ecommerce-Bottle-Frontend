@@ -14,6 +14,45 @@ import {
   ChevronRight, Loader2, Shield, Lock, Truck, ArrowRight
 } from "lucide-react";
 
+const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+];
+
 export default function CheckoutPage() {
   const [hasMounted, setHasMounted] = useState(false);
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -30,6 +69,9 @@ export default function CheckoutPage() {
   const [temporaryGuestAddress, setTemporaryGuestAddress] = useState(null);
 
   const [userEmail, setUserEmail] = useState(""); // This tracks the email for the whole session
+  const [emailInput, setEmailInput] = useState("");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
   const [newAddr, setNewAddr] = useState({
     fullName: "",
     phone: "",
@@ -37,6 +79,7 @@ export default function CheckoutPage() {
     city: "",
     pincode: "",
     state: "",
+    landmark: "",
   });
 
   const [deliveryContext, setDeliveryContext] = useState(null);
@@ -279,50 +322,134 @@ export default function CheckoutPage() {
   }, [selectedAddressId, isAddingAddress, savedAddresses]);
 
   const handlePincodeChange = async (e) => {
-    const pin = e.target.value.replace(/\D/g, ""); // Allow only numbers
-    setNewAddr({ ...newAddr, pincode: pin });
+    const pin = e.target.value
+      .replace(/\D/g, "")
+      .slice(0, 6);
 
-    if (pin.length === 6) {
-      setSidebarLoading(true);
-      try {
-        const res = await fetch(`https://api.zippopotam.us/in/${pin}`);
-        const data = await res.json();
+    setNewAddr((prev) => ({
+      ...prev,
+      pincode: pin,
+    }));
 
-        if (data && data.places && data.places.length > 0) {
-          const place = data.places[0];
-          const city = place["place name"];
-          const state = place["state"];
-          const lat = parseFloat(place.latitude);
-          const lng = parseFloat(place.longitude);
-          const dist = calculateDistance(lat, lng);
+    // Only lookup after exactly 6 digits.
+    if (pin.length !== 6) {
+      return;
+    }
 
-          // UPDATE FORM STATE IMMEDIATELY
-          setNewAddr(prev => ({
-            ...prev,
-            city: city,
-            state: state,
-            pincode: pin
-          }));
+    setSidebarLoading(true);
 
-          // SYNC SIDEBAR
-          saveAndSync(pin, dist, city, [lat, lng]);
-        }
-      } catch (err) {
-        // Fallback logic
-        const isDelhi = pin.startsWith("11");
-        const fallbackCity = isDelhi ? "South Delhi" : "National";
-        const fallbackState = isDelhi ? "Delhi" : "";
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pin}`
+      );
 
-        setNewAddr(prev => ({
+      const data = await res.json();
+
+      if (
+        data?.[0]?.Status === "Success" &&
+        data?.[0]?.PostOffice?.length > 0
+      ) {
+        const postOffice = data[0].PostOffice[0];
+
+        const city = postOffice.District || "";
+        const state = postOffice.State || "";
+
+        setNewAddr((prev) => ({
           ...prev,
-          city: fallbackCity,
-          state: fallbackState
+          pincode: pin,
+          city,
+          state,
         }));
 
-        saveAndSync(pin, isDelhi ? 8.4 : 45.2, fallbackCity, [0, 0]);
-      } finally {
-        setSidebarLoading(false);
+        // India Post normally provides coordinates. Keep delivery
+        // calculation in sync when they are available.
+        const lat = parseFloat(postOffice.Latitude);
+        const lng = parseFloat(postOffice.Longitude);
+
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+          const dist = calculateDistance(lat, lng);
+
+          saveAndSync(
+            pin,
+            dist,
+            city,
+            [lat, lng]
+          );
+        } else {
+          // Preserve the existing delivery-zone fallback behavior.
+          const isDelhi = pin.startsWith("11");
+          const isNCR =
+            pin.startsWith("201") ||
+            pin.startsWith("122") ||
+            pin.startsWith("121");
+
+          if (isDelhi) {
+            saveAndSync(
+              pin,
+              8.4,
+              city || "Delhi",
+              [28.6, 77.2]
+            );
+          } else if (isNCR) {
+            saveAndSync(
+              pin,
+              35.0,
+              city || "NCR",
+              [28.4, 77.0]
+            );
+          } else {
+            saveAndSync(
+              pin,
+              500.0,
+              city || "National",
+              [0, 0]
+            );
+          }
+        }
+      } else {
+        setNewAddr((prev) => ({
+          ...prev,
+          pincode: pin,
+          city: "",
+          state: "",
+        }));
+
+        toast.error("Invalid pincode");
       }
+    } catch (err) {
+      console.error(
+        "Pincode lookup failed:",
+        err
+      );
+
+      // Preserve your existing fallback logic.
+      const isDelhi = pin.startsWith("11");
+
+      const fallbackCity = isDelhi
+        ? "South Delhi"
+        : "National";
+
+      const fallbackState = isDelhi
+        ? "Delhi"
+        : "";
+
+      setNewAddr((prev) => ({
+        ...prev,
+        pincode: pin,
+        city: fallbackCity,
+        state: fallbackState,
+      }));
+
+      saveAndSync(
+        pin,
+        isDelhi ? 8.4 : 45.2,
+        fallbackCity,
+        isDelhi
+          ? [28.6139, 77.2090]
+          : [0, 0]
+      );
+    } finally {
+      setSidebarLoading(false);
     }
   };
 
@@ -347,7 +474,7 @@ export default function CheckoutPage() {
         city: newAddr.city,
         state: newAddr.state,
         zip: newAddr.pincode,
-        landmark: "",
+        landmark: newAddr.landmark || "",
         isDefault: false,
       }),
     }
@@ -416,6 +543,7 @@ export default function CheckoutPage() {
         city: newAddr.city,
         zip: newAddr.pincode,
         state: newAddr.state,
+        landmark: newAddr.landmark || "",
     };
 
     setTemporaryGuestAddress(manualAddress);
@@ -444,6 +572,7 @@ export default function CheckoutPage() {
         city: newAddr.city,
         zip: newAddr.pincode,
         state: newAddr.state,
+        landmark: newAddr.landmark || "",
       };
     } else {
       addressToSend = savedAddresses.find((a) => a._id === selectedAddressId);
@@ -846,7 +975,7 @@ export default function CheckoutPage() {
                         <label>Full Name*</label>
                         <input
                           type="text"
-                          value={newAddr.fullName} // PERSIST DATA
+                          value={newAddr.fullName}
                           onChange={(e) => setNewAddr({ ...newAddr, fullName: e.target.value })}
                           required
                         />
@@ -867,58 +996,153 @@ export default function CheckoutPage() {
                         <label>Phone Number*</label>
                         <input
                           type="tel"
-                          value={newAddr.phone} // PERSIST DATA
-                          onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })}
+                          value={newAddr.phone}
+                          maxLength={10}
+                          inputMode="numeric"
+                          pattern="[0-9]{10}"
+                          onChange={(e) =>
+                            setNewAddr({
+                              ...newAddr,
+                              phone: e.target.value
+                                .replace(/\D/g, "")
+                                .slice(0, 10),
+                            })
+                          }
                           required
+                          placeholder="10-digit mobile number"
                         />
                       </div>
                       <div className="input-group">
                         <label>Street Address*</label>
                         <input
                           type="text"
-                          value={newAddr.addressLine} // PERSIST DATA
+                          value={newAddr.addressLine}
                           onChange={(e) => setNewAddr({ ...newAddr, addressLine: e.target.value })}
                           required
                         />
                       </div>
                     </div>
 
-                    <div className="input-row triplet">
+                    {/* Pincode + City */}
+                    <div className="input-row">
                       <div className="input-group">
                         <label>Pincode*</label>
                         <input
                           type="text"
-                          maxLength="6"
+                          maxLength={6}
+                          inputMode="numeric"
+                          pattern="[0-9]{6}"
                           value={newAddr.pincode}
                           onChange={handlePincodeChange}
                           required
                           placeholder="6 Digit PIN"
                         />
+
+                        {sidebarLoading && (
+                          <small
+                            style={{
+                              display: "block",
+                              marginTop: "6px",
+                              color: "#64748b",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Fetching location...
+                          </small>
+                        )}
                       </div>
+
                       <div className="input-group">
                         <label>City*</label>
                         <input
                           type="text"
                           value={newAddr.city}
-                          onChange={(e) => setNewAddr({ ...newAddr, city: e.target.value })} // Allow manual edit if needed
+                          onChange={(e) =>
+                            setNewAddr({
+                              ...newAddr,
+                              city: e.target.value,
+                            })
+                          }
                           required
                           className={!newAddr.city ? "input-pending" : ""}
                           placeholder="City"
                         />
                       </div>
-                      <div className="input-group">
-                        <label>State*</label>
-                        <input
-                          type="text"
-                          value={newAddr.state}
-                          onChange={(e) => setNewAddr({ ...newAddr, state: e.target.value })} // Allow manual edit
-                          required
-                          className={!newAddr.state ? "input-pending" : ""}
-                          placeholder="State"
-                        />
-                      </div>
                     </div>
-                    <button type="submit" className="btn-action">Proceed to Payment</button>
+
+                    {/* State + Landmark */}
+                   <div className="input-row">
+  <div className="input-group">
+    <label>State*</label>
+
+    <select
+      value={newAddr.state}
+      onChange={(e) =>
+        setNewAddr({
+          ...newAddr,
+          state: e.target.value,
+        })
+      }
+      required
+      style={{
+        width: "100%",
+        height: "48px",
+        padding: "0 14px",
+        border: "1px solid #e2e8f0",
+        borderRadius: "10px",
+        backgroundColor: "#ffffff",
+        color: newAddr.state ? "#0f172a" : "#94a3b8",
+        fontSize: "14px",
+        outline: "none",
+        cursor: "pointer",
+        appearance: "auto",
+        transition: "all 0.2s ease",
+      }}
+    >
+      <option value="" disabled>
+        Select State
+      </option>
+
+      {INDIAN_STATES.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="input-group">
+    <label>Landmark (Optional)</label>
+
+    <input
+      type="text"
+      value={newAddr.landmark || ""}
+      onChange={(e) =>
+        setNewAddr({
+          ...newAddr,
+          landmark: e.target.value,
+        })
+      }
+      placeholder="E.g. Near Big Bazaar"
+      style={{
+        width: "100%",
+        height: "48px",
+        padding: "0 14px",
+        border: "1px solid #e2e8f0",
+        borderRadius: "10px",
+        backgroundColor: "#ffffff",
+        color: "#0f172a",
+        fontSize: "14px",
+        outline: "none",
+        transition: "all 0.2s ease",
+      }}
+    />
+  </div>
+</div>
+
+                    <button type="submit" className="btn-action">
+                      Proceed to Payment
+                    </button>
                   </form>
                 )}
               </div>
