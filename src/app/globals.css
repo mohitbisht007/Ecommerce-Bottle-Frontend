@@ -524,20 +524,19 @@
 /* Container - Fixed height is vital for CLS score */
 .hero-section {
   width: 100%;
-  height: 85vh;
-  min-height: 500px;
-  background: #f1f5f9;
   position: relative;
   overflow: hidden;
+  background: #f1f5f9;
 }
 
 .hero-slide-wrapper {
   position: relative;
   width: 100%;
-  height: 90vh;
-  min-height: 500px;
-  display: flex;
-  align-items: center;
+}
+
+.hero-slide-wrapper picture {
+  display: block;
+  width: 100%;
 }
 
 /* Fix for SSR stacking: Hide all slides except the first one until Swiper is ready */
@@ -551,7 +550,9 @@
 
 /* Image Optimization */
 .hero-img {
-  object-fit: cover;
+  display: block;
+  width: 100%;
+  height: auto;
   z-index: 0;
 }
 
