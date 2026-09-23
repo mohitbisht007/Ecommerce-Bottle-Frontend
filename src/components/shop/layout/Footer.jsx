@@ -96,7 +96,10 @@ export default function Footer() {
             <h4>Get in Touch</h4>
 
             <p className="footer-contact-item">
-              📍 UGF, Flat No. 2, Plot E-4, Hanuman Vihar, Barola, Noida, UP, 201301
+              <b>GSTIN:</b> 09CVJPC3384D1ZM
+            </p>
+            <p className="footer-contact-item">
+              📍 Hanuman Vihar, Sector 49, Noida, UP, 201301
             </p>
 
             <p className="footer-contact-item">

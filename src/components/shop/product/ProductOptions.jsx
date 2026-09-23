@@ -9,119 +9,177 @@ export default function ProductOptions({
   setSelectedCapacity,
   setActiveImgIdx,
 }) {
-
-  const availableCapacities =
-    currentVariant?.sizes || [];
+  const availableCapacities = currentVariant?.sizes || [];
 
   return (
     <>
+      {/* ================= PRODUCT IMAGE / DESIGN ================= */}
       <div className="product-option-section">
-
         <p className="option-label">
-          Color: <strong>{currentVariant.colorName}</strong>
+          Select Design:
+          <strong> {currentVariant?.colorName}</strong>
         </p>
 
-        <div className="swatch-grid">
+        <div className="flex flex-wrap gap-3 mt-3">
+          {product.variants.map((v, i) => {
+            const variantImage =
+              v.images?.[0] ||
+              v.image ||
+              product.images?.[0];
 
-          {product.variants.map((v, i) => (
+            const isSelected = selectedVarIdx === i;
 
-            <button
-              key={`${product._id}-${v.colorName}`}
+            return (
+              <button
+                key={`${product._id}-${v.colorName}-${i}`}
+                type="button"
+                aria-label={`Select ${v.colorName}`}
+                title={v.colorName}
+                className={`
+                  relative
+                  w-[76px]
+                  h-[76px]
+                  p-1
+                  rounded-xl
+                  overflow-hidden
+                  bg-white
+                  cursor-pointer
+                  transition-all
+                  duration-200
+                  ease-out
 
-              className={`swatch-ring ${selectedVarIdx === i
-                  ? "active"
-                  : ""
-                }`}
+                  border-2
+                  ${
+                    isSelected
+                      ? "border-violet-600 ring-2 ring-violet-100"
+                      : "border-gray-200 hover:border-gray-400"
+                  }
 
-              style={{
-                "--swatch-hex": v.colorCode
-              }}
+                  ${
+                    isSelected
+                      ? "shadow-md"
+                      : "shadow-sm hover:shadow-md"
+                  }
 
-              onClick={() => {
+                  ${
+                    isSelected
+                      ? "scale-[1.03]"
+                      : "hover:-translate-y-0.5"
+                  }
+                `}
+                onClick={() => {
+                  setSelectedVarIdx(i);
 
-                setSelectedVarIdx(i);
+                  setSelectedColor(v.colorName);
 
-                setSelectedColor(v.colorName);
+                  // Auto-select first available size
+                  if (v.sizes?.length > 0) {
+                    const firstAvailableSize = v.sizes.find(
+                      (size) => (size.stock || 0) > 0
+                    );
 
-                // auto-select first size
-                if (v.sizes?.length > 0) {
-                  setSelectedCapacity(
-                    v.sizes[0].capacity
-                  );
-                }
+                    if (firstAvailableSize) {
+                      setSelectedCapacity(
+                        firstAvailableSize.capacity
+                      );
+                    }
+                  }
 
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
+                  setActiveImgIdx(0);
 
-                setActiveImgIdx(0);
-              }}
-            />
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
+                }}
+              >
+                {/* Product image */}
+                <img
+                  src={variantImage}
+                  alt={v.colorName}
+                  className="
+                    w-full
+                    h-full
+                    object-contain
+                    rounded-lg
+                    block
+                  "
+                />
 
-          ))}
+                {/* Selected indicator */}
+                {isSelected && (
+                  <span
+                    className="
+                      absolute
+                      top-1
+                      right-1
+                      w-5
+                      h-5
+                      rounded-full
+                      bg-violet-600
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      text-[11px]
+                      font-bold
+                      shadow-sm
+                    "
+                  >
+                    ✓
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* ================= CAPACITY ================= */}
       <div className="product-option-section">
-
         <p className="option-label">
           Select Capacity:
           <strong> {selectedCapacity}</strong>
         </p>
 
         <div className="capacity-grid">
+          {availableCapacities.map((sizeObj, index) => {
+            const vStock = sizeObj.stock || 0;
+            const isOutOfStock = vStock <= 0;
 
-          {availableCapacities.map(
-            (sizeObj, index) => {
+            return (
+              <button
+                key={`size-${sizeObj.capacity}-${index}`}
+                type="button"
+                className={`size-card ${
+                  selectedCapacity === sizeObj.capacity
+                    ? "active"
+                    : ""
+                } ${
+                  isOutOfStock
+                    ? "disabled"
+                    : ""
+                }`}
+                onClick={() =>
+                  !isOutOfStock &&
+                  setSelectedCapacity(sizeObj.capacity)
+                }
+                disabled={isOutOfStock}
+              >
+                <span className="size-val">
+                  {sizeObj.capacity}
+                </span>
 
-              const vStock =
-                sizeObj.stock || 0;
-
-              const isOutOfStock =
-                vStock <= 0;
-
-              return (
-
-                <button
-                  key={`size-${sizeObj.capacity}-${index}`}
-
-                  className={`size-card ${selectedCapacity ===
-                      sizeObj.capacity
-                      ? "active"
-                      : ""
-                    } ${isOutOfStock
-                      ? "disabled"
-                      : ""
-                    }`}
-
-                  onClick={() =>
-                    !isOutOfStock &&
-                    setSelectedCapacity(
-                      sizeObj.capacity
-                    )
-                  }
-
-                  disabled={isOutOfStock}
-                >
-
-                  <span className="size-val">
-                    {sizeObj.capacity}
-                  </span>
-
-                  <span className="size-sub">
-                    {isOutOfStock
-                      ? "Out of Stock"
-                      : vStock <= 5
-                        ? `Only ${vStock} left`
-                        : "Available"}
-                  </span>
-
-                </button>
-
-              );
-            }
-          )}
+                <span className="size-sub">
+                  {isOutOfStock
+                    ? "Out of Stock"
+                    : vStock <= 5
+                    ? `Only ${vStock} left`
+                    : "Available"}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </>
