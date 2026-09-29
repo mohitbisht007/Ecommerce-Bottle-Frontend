@@ -1,11 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sliders, Megaphone, FolderOpen, Film } from "lucide-react";
+import {
+  Sliders,
+  Megaphone,
+  FolderOpen,
+  Film,
+  TicketPercent,
+} from "lucide-react";
 import BannerManager from "./components/BannerManager";
 import AnnouncementManager from "./components/AnnouncementManager";
 import CategoryManager from "./components/CategoryManager";
 import ReelManager from "./components/ReelManager";
+import CouponManager from "./components/CouponManager";
 
 export default function StorefrontPage() {
   const [activeTab, setActiveTab] = useState("banners");
@@ -23,6 +30,7 @@ export default function StorefrontPage() {
     { id: "announcement", label: "Announcement Bar", icon: <Megaphone size={16} /> },
     { id: "categories", label: "Categories", icon: <FolderOpen size={16} /> },
     { id: "reels", label: "Watch & Buy Reels", icon: <Film size={16} /> },
+    { id: "coupons", label: "Coupons", icon: <TicketPercent size={16} /> },
   ];
 
   return (
@@ -57,6 +65,7 @@ export default function StorefrontPage() {
         {activeTab === "announcement" && <AnnouncementManager />}
         {activeTab === "categories" && <CategoryManager />}
         {activeTab === "reels" && <ReelManager />}
+        {activeTab === "coupons" && <CouponManager />}
       </main>
     </div>
   );

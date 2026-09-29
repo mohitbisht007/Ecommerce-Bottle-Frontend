@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 
 import {
   X, Check, ShoppingBag, Plus, Trash2, ChevronLeft,
-  ChevronRight, Loader2, Shield, Lock, Truck, ArrowRight
+  ChevronRight, Loader2, Shield, Lock, Truck, ArrowRight, TicketPercent
 } from "lucide-react";
 
 const INDIAN_STATES = [
@@ -64,6 +64,10 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   // Holds guest address locally until the "Pay" button is clicked
   const [temporaryGuestAddress, setTemporaryGuestAddress] = useState(null);
@@ -211,9 +215,53 @@ export default function CheckoutPage() {
   };
 
   const gstRate = 0.18;
-  const finalTotal = cartTotal; // This is the 999 user sees
+
+  const couponDiscount = appliedCoupon
+    ? Number(appliedCoupon.discount || 0)
+    : 0;
+
+  const discountedTotal = Math.max(
+    0,
+    cartTotal - couponDiscount
+  );
+
+  const finalTotal = discountedTotal;
+
   const basePrice = Math.round(finalTotal / (1 + gstRate));
   const gstAmount = finalTotal - basePrice;
+
+  useEffect(() => {
+    if (!appliedCoupon) return;
+
+    const totalItems = cartItems.reduce(
+      (total, item) => total + Number(item.quantity || 0),
+      0
+    );
+
+    const currentCartTotal = Number(cartTotal);
+
+    const minimumItems = Number(
+      appliedCoupon.minimumItems || 1
+    );
+
+    const minimumCartValue = Number(
+      appliedCoupon.minimumCartValue || 0
+    );
+
+    if (
+      totalItems < minimumItems ||
+      currentCartTotal < minimumCartValue
+    ) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+
+      setCouponError(
+        `Coupon removed because your cart no longer meets the requirements.`
+      );
+
+      toast.error("Coupon removed — cart no longer qualifies.");
+    }
+  }, [cartItems, cartTotal, appliedCoupon]);
 
 
   useEffect(() => {
@@ -230,20 +278,20 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-  if (!confirmingOrder) return;
+    if (!confirmingOrder) return;
 
-  window.history.pushState(null, "", window.location.href);
-
-  const handlePopState = () => {
     window.history.pushState(null, "", window.location.href);
-  };
 
-  window.addEventListener("popstate", handlePopState);
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
 
-  return () => {
-    window.removeEventListener("popstate", handlePopState);
-  };
-}, [confirmingOrder]);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [confirmingOrder]);
 
 
   const getAuthHeaders = () => {
@@ -454,89 +502,89 @@ export default function CheckoutPage() {
   };
 
   const saveAddress = async () => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  if (!token) return null;
+    if (!token) return null;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/add-address`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `JWT ${token}`,
-      },
-      body: JSON.stringify({
-        name: newAddr.fullName,
-        email: userEmail,
-        number: newAddr.phone,
-        street: newAddr.addressLine,
-        city: newAddr.city,
-        state: newAddr.state,
-        zip: newAddr.pincode,
-        landmark: newAddr.landmark || "",
-        isDefault: false,
-      }),
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/add-address`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `JWT ${token}`,
+        },
+        body: JSON.stringify({
+          name: newAddr.fullName,
+          email: userEmail,
+          number: newAddr.phone,
+          street: newAddr.addressLine,
+          city: newAddr.city,
+          state: newAddr.state,
+          zip: newAddr.pincode,
+          landmark: newAddr.landmark || "",
+          isDefault: false,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Unable to save address");
     }
-  );
 
-  if (!res.ok) {
-    throw new Error("Unable to save address");
-  }
+    return await res.json();
+  };
 
-  return await res.json();
-};
-
-  const handleContinueToPayment = async  (e) => {
+  const handleContinueToPayment = async (e) => {
     if (e) e.preventDefault();
 
     if (isAddingAddress) {
 
-    const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-    // Logged in user
-    if (token) {
+      // Logged in user
+      if (token) {
 
         try {
 
-            await saveAddress();
+          await saveAddress();
 
-            await fetchAddresses(token);
+          await fetchAddresses(token);
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/me`,
-                {
-                    headers: {
-                        Authorization: `JWT ${token}`,
-                    },
-                }
-            );
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/me`,
+            {
+              headers: {
+                Authorization: `JWT ${token}`,
+              },
+            }
+          );
 
-            const data = await res.json();
+          const data = await res.json();
 
-            const addresses = data.user.addresses;
+          const addresses = data.user.addresses;
 
-            const latest = addresses[addresses.length - 1];
+          const latest = addresses[addresses.length - 1];
 
-            setSavedAddresses(addresses);
+          setSavedAddresses(addresses);
 
-            setSelectedAddressId(latest._id);
+          setSelectedAddressId(latest._id);
 
-            setIsAddingAddress(false);
+          setIsAddingAddress(false);
 
-            setStep(3);
+          setStep(3);
 
-            return;
+          return;
 
         } catch (err) {
-            alert(err.message);
-            return;
+          alert(err.message);
+          return;
         }
-    }
+      }
 
-    // Guest Checkout
+      // Guest Checkout
 
-    const manualAddress = {
+      const manualAddress = {
         name: newAddr.fullName,
         number: newAddr.phone,
         street: newAddr.addressLine,
@@ -544,19 +592,137 @@ export default function CheckoutPage() {
         zip: newAddr.pincode,
         state: newAddr.state,
         landmark: newAddr.landmark || "",
-    };
+      };
 
-    setTemporaryGuestAddress(manualAddress);
+      setTemporaryGuestAddress(manualAddress);
 
-    setStep(3);
+      setStep(3);
 
-    return;
-} if (selectedAddressId) {
-        setStep(3);
+      return;
+    } if (selectedAddressId) {
+      setStep(3);
     } else {
-        alert("Please select an address.");
+      alert("Please select an address.");
     }
   };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+
+    setCouponLoading(true);
+    setCouponError("");
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/coupons/validate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code: couponCode.trim(),
+            items: cartItems,
+            cartTotal,
+            couponCode: appliedCoupon?.code || null,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Unable to apply coupon");
+      }
+
+      setAppliedCoupon({
+        code: data.coupon.code,
+        discount: Number(data.discount),
+        finalAmount: Number(data.finalAmount),
+        discountType: data.coupon.discountType,
+        discountValue: Number(data.coupon.discountValue),
+        minimumItems: Number(data.coupon.minimumItems || 1),
+        minimumCartValue: Number(data.coupon.minimumCartValue || 0),
+        maximumDiscount:
+          data.coupon.maximumDiscount !== null &&
+            data.coupon.maximumDiscount !== undefined
+            ? Number(data.coupon.maximumDiscount)
+            : null,
+      });
+
+      setCouponError("");
+      toast.success("Coupon applied successfully!");
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(error.message || "Invalid coupon code");
+      toast.error(error.message || "Invalid coupon code");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  useEffect(() => {
+  if (!appliedCoupon) return;
+
+  const totalItems = cartItems.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0
+  );
+
+  const currentCartTotal = Number(cartTotal);
+
+  const minimumItems = Number(
+    appliedCoupon.minimumItems || 1
+  );
+
+  const minimumCartValue = Number(
+    appliedCoupon.minimumCartValue || 0
+  );
+
+  // Cart no longer qualifies
+  if (
+    totalItems < minimumItems ||
+    currentCartTotal < minimumCartValue
+  ) {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+
+    toast.error("Coupon removed — cart no longer qualifies.");
+
+    return;
+  }
+
+  // Recalculate discount using CURRENT cart total
+  let discount = 0;
+
+  if (appliedCoupon.discountType === "percentage") {
+    discount =
+      (currentCartTotal * Number(appliedCoupon.discountValue)) / 100;
+
+    if (
+      appliedCoupon.maximumDiscount !== null &&
+      discount > Number(appliedCoupon.maximumDiscount)
+    ) {
+      discount = Number(appliedCoupon.maximumDiscount);
+    }
+  }
+
+  if (appliedCoupon.discountType === "fixed") {
+    discount = Number(appliedCoupon.discountValue);
+  }
+
+  // Never discount more than the cart
+  discount = Math.min(discount, currentCartTotal);
+
+  const finalAmount = currentCartTotal - discount;
+
+  setAppliedCoupon((prev) => ({
+    ...prev,
+    discount,
+    finalAmount,
+  }));
+}, [cartItems, cartTotal]);
 
   const handleRazorpay = async () => {
     setLoading(true);
@@ -659,176 +825,176 @@ export default function CheckoutPage() {
   if (!hasMounted) return null;
 
   if (confirmingOrder) {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center px-6">
-      <div className="max-w-md text-center">
+    return (
+      <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
 
-        <div className="mx-auto w-20 h-20 rounded-full border-4 border-pink-500 border-t-transparent animate-spin"></div>
+          <div className="mx-auto w-20 h-20 rounded-full border-4 border-pink-500 border-t-transparent animate-spin"></div>
 
-        <h2 className="mt-10 text-3xl font-bold text-slate-900">
-          Confirming Your Order
-        </h2>
+          <h2 className="mt-10 text-3xl font-bold text-slate-900">
+            Confirming Your Order
+          </h2>
 
-        <p className="mt-4 text-slate-600 leading-7">
-          Please don't refresh, close this window or press the back button.
-        </p>
+          <p className="mt-4 text-slate-600 leading-7">
+            Please don't refresh, close this window or press the back button.
+          </p>
 
-        <div className="mt-10 space-y-3">
+          <div className="mt-10 space-y-3">
 
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-            <span className="text-slate-700">
-              Verifying secure payment...
-            </span>
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+              <span className="text-slate-700">
+                Verifying secure payment...
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+              <span className="text-slate-700">
+                Saving your order...
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+              <span className="text-slate-700">
+                Generating invoice...
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+              <span className="text-slate-700">
+                Sending confirmation email...
+              </span>
+            </div>
+
           </div>
 
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-            <span className="text-slate-700">
-              Saving your order...
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-            <span className="text-slate-700">
-              Generating invoice...
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-            <span className="text-slate-700">
-              Sending confirmation email...
-            </span>
+          <div className="mt-10 text-sm text-slate-500">
+            This usually takes 5–15 seconds.
           </div>
 
         </div>
+      </div>
+    );
+  }
 
-        <div className="mt-10 text-sm text-slate-500">
-          This usually takes 5–15 seconds.
+  if (cartItems.length === 0)
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 py-10 overflow-hidden">
+
+        {/* Background Glow */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          <div className="absolute top-[-120px] left-[-120px] w-[320px] h-[320px] bg-cyan-200/30 blur-3xl rounded-full"></div>
+          <div className="absolute bottom-[-120px] right-[-120px] w-[320px] h-[320px] bg-pink-200/20 blur-3xl rounded-full"></div>
         </div>
 
-      </div>
-    </div>
-  );
-}
+        <section className="relative w-full max-w-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-[32px] shadow-[0_20px_80px_rgba(15,23,42,0.08)] overflow-hidden">
 
- if (cartItems.length === 0)
-  return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 py-10 overflow-hidden">
-      
-      {/* Background Glow */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute top-[-120px] left-[-120px] w-[320px] h-[320px] bg-cyan-200/30 blur-3xl rounded-full"></div>
-        <div className="absolute bottom-[-120px] right-[-120px] w-[320px] h-[320px] bg-pink-200/20 blur-3xl rounded-full"></div>
-      </div>
+            {/* Top Banner */}
+            <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-10 pt-14 pb-20 text-center">
 
-      <section className="relative w-full max-w-xl">
-        <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-[32px] shadow-[0_20px_80px_rgba(15,23,42,0.08)] overflow-hidden">
-
-          {/* Top Banner */}
-          <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 sm:px-10 pt-14 pb-20 text-center">
-
-            <div className="mx-auto w-28 h-28 rounded-full bg-white flex items-center justify-center border-[6px] border-slate-100 shadow-2xl">
-              <ShoppingBag
-                size={56}
-                strokeWidth={1.5}
-                className="text-slate-900"
-              />
-            </div>
-
-            <h1 className="mt-6 text-3xl sm:text-4xl font-bold text-white tracking-tight">
-              Your Cart is Empty
-            </h1>
-
-            <p className="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-              Looks like you haven’t added anything yet. Explore our premium collection and discover hydration products crafted for modern lifestyles.
-            </p>
-          </div>
-
-          {/* Bottom Content */}
-          <div className="relative px-5 sm:px-8 pb-8 -mt-10 z-10">
-
-            {/* Feature Box */}
-            <div className="bg-white border border-slate-200 rounded-3xl shadow-lg p-6">
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
-                    ✨
-                  </div>
-
-                  <h3 className="font-semibold text-slate-900 text-sm">
-                    Premium Design
-                  </h3>
-
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Minimal, modern bottles crafted for style and performance.
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
-                    🚚
-                  </div>
-
-                  <h3 className="font-semibold text-slate-900 text-sm">
-                    Fast Delivery
-                  </h3>
-
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Express shipping available across India with secure packaging.
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
-                    🛡️
-                  </div>
-
-                  <h3 className="font-semibold text-slate-900 text-sm">
-                    Trusted Quality
-                  </h3>
-
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Durable stainless steel and leakproof craftsmanship.
-                  </p>
-                </div>
+              <div className="mx-auto w-28 h-28 rounded-full bg-white flex items-center justify-center border-[6px] border-slate-100 shadow-2xl">
+                <ShoppingBag
+                  size={56}
+                  strokeWidth={1.5}
+                  className="text-slate-900"
+                />
               </div>
 
-              {/* CTA */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <h1 className="mt-6 text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                Your Cart is Empty
+              </h1>
 
-                <Link
-                  href="/shop"
-                  className="flex-1 h-14 rounded-2xl bg-black hover:bg-slate-800 transition-all duration-300 text-white flex items-center justify-center gap-2 font-medium shadow-lg shadow-black/10"
-                >
-                  Explore Collection
-                  <ArrowRight size={18} />
-                </Link>
-
-                <Link
-                  href="/"
-                  className="flex-1 h-14 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 transition-all duration-300 text-slate-900 flex items-center justify-center font-medium"
-                >
-                  Back to Home
-                </Link>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-8 text-center">
-              <p className="text-xs text-slate-400">
-                Trusted by modern lifestyle enthusiasts across India.
+              <p className="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+                Looks like you haven’t added anything yet. Explore our premium collection and discover hydration products crafted for modern lifestyles.
               </p>
             </div>
+
+            {/* Bottom Content */}
+            <div className="relative px-5 sm:px-8 pb-8 -mt-10 z-10">
+
+              {/* Feature Box */}
+              <div className="bg-white border border-slate-200 rounded-3xl shadow-lg p-6">
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                      ✨
+                    </div>
+
+                    <h3 className="font-semibold text-slate-900 text-sm">
+                      Premium Design
+                    </h3>
+
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Minimal, modern bottles crafted for style and performance.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                      🚚
+                    </div>
+
+                    <h3 className="font-semibold text-slate-900 text-sm">
+                      Fast Delivery
+                    </h3>
+
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Express shipping available across India with secure packaging.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+                      🛡️
+                    </div>
+
+                    <h3 className="font-semibold text-slate-900 text-sm">
+                      Trusted Quality
+                    </h3>
+
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Durable stainless steel and leakproof craftsmanship.
+                    </p>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+
+                  <Link
+                    href="/shop"
+                    className="flex-1 h-14 rounded-2xl bg-black hover:bg-slate-800 transition-all duration-300 text-white flex items-center justify-center gap-2 font-medium shadow-lg shadow-black/10"
+                  >
+                    Explore Collection
+                    <ArrowRight size={18} />
+                  </Link>
+
+                  <Link
+                    href="/"
+                    className="flex-1 h-14 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 transition-all duration-300 text-slate-900 flex items-center justify-center font-medium"
+                  >
+                    Back to Home
+                  </Link>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-8 text-center">
+                <p className="text-xs text-slate-400">
+                  Trusted by modern lifestyle enthusiasts across India.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
-  );
+        </section>
+      </div>
+    );
 
   return (
     <div className="checkout-page-root">
@@ -1071,74 +1237,74 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* State + Landmark */}
-                   <div className="input-row">
-  <div className="input-group">
-    <label>State*</label>
+                    <div className="input-row">
+                      <div className="input-group">
+                        <label>State*</label>
 
-    <select
-      value={newAddr.state}
-      onChange={(e) =>
-        setNewAddr({
-          ...newAddr,
-          state: e.target.value,
-        })
-      }
-      required
-      style={{
-        width: "100%",
-        height: "48px",
-        padding: "0 14px",
-        border: "1px solid #e2e8f0",
-        borderRadius: "10px",
-        backgroundColor: "#ffffff",
-        color: newAddr.state ? "#0f172a" : "#94a3b8",
-        fontSize: "14px",
-        outline: "none",
-        cursor: "pointer",
-        appearance: "auto",
-        transition: "all 0.2s ease",
-      }}
-    >
-      <option value="" disabled>
-        Select State
-      </option>
+                        <select
+                          value={newAddr.state}
+                          onChange={(e) =>
+                            setNewAddr({
+                              ...newAddr,
+                              state: e.target.value,
+                            })
+                          }
+                          required
+                          style={{
+                            width: "100%",
+                            height: "48px",
+                            padding: "0 14px",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "10px",
+                            backgroundColor: "#ffffff",
+                            color: newAddr.state ? "#0f172a" : "#94a3b8",
+                            fontSize: "14px",
+                            outline: "none",
+                            cursor: "pointer",
+                            appearance: "auto",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <option value="" disabled>
+                            Select State
+                          </option>
 
-      {INDIAN_STATES.map((state) => (
-        <option key={state} value={state}>
-          {state}
-        </option>
-      ))}
-    </select>
-  </div>
+                          {INDIAN_STATES.map((state) => (
+                            <option key={state} value={state}>
+                              {state}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-  <div className="input-group">
-    <label>Landmark (Optional)</label>
+                      <div className="input-group">
+                        <label>Landmark (Optional)</label>
 
-    <input
-      type="text"
-      value={newAddr.landmark || ""}
-      onChange={(e) =>
-        setNewAddr({
-          ...newAddr,
-          landmark: e.target.value,
-        })
-      }
-      placeholder="E.g. Near Big Bazaar"
-      style={{
-        width: "100%",
-        height: "48px",
-        padding: "0 14px",
-        border: "1px solid #e2e8f0",
-        borderRadius: "10px",
-        backgroundColor: "#ffffff",
-        color: "#0f172a",
-        fontSize: "14px",
-        outline: "none",
-        transition: "all 0.2s ease",
-      }}
-    />
-  </div>
-</div>
+                        <input
+                          type="text"
+                          value={newAddr.landmark || ""}
+                          onChange={(e) =>
+                            setNewAddr({
+                              ...newAddr,
+                              landmark: e.target.value,
+                            })
+                          }
+                          placeholder="E.g. Near Big Bazaar"
+                          style={{
+                            width: "100%",
+                            height: "48px",
+                            padding: "0 14px",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "10px",
+                            backgroundColor: "#ffffff",
+                            color: "#0f172a",
+                            fontSize: "14px",
+                            outline: "none",
+                            transition: "all 0.2s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
 
                     <button type="submit" className="btn-action">
                       Proceed to Payment
@@ -1225,7 +1391,7 @@ export default function CheckoutPage() {
                   ) : (
                     <div className="btn-content-flex">
                       <Lock size={18} />
-                      <span>{`Pay Securely ₹${cartTotal}`}</span>
+                      <span>{`Pay Securely ₹${finalTotal}`}</span>
                       <ChevronRight size={18} className="arrow-hide" />
                     </div>
                   )}
@@ -1263,6 +1429,90 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* COUPON SECTION */}
+              <div className="mt-[18px] rounded-2xl border border-slate-200 bg-white p-4">
+                {/* Header */}
+                <div className="mb-3.5 flex items-center gap-[11px]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-slate-200 bg-slate-50 text-slate-900">
+                    <TicketPercent size={17} />
+                  </div>
+
+                  <div>
+                    <p className="m-0 text-[13px] font-bold text-slate-900">
+                      Have a coupon?
+                    </p>
+
+                    <p className="mt-[3px] text-[11px] text-slate-400">
+                      Enter your private discount code
+                    </p>
+                  </div>
+                </div>
+
+                {!appliedCoupon ? (
+                  <>
+                    {/* Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase());
+                          setCouponError("");
+                        }}
+                        placeholder="Enter coupon code"
+                        maxLength={30}
+                        className="h-[42px] min-w-0 flex-1 rounded-[10px] border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                      />
+
+                      <button
+                        type="button"
+                        disabled={!couponCode.trim() || couponLoading}
+                        onClick={handleApplyCoupon}
+                        className="h-[42px] shrink-0 rounded-[10px] bg-slate-900 px-[15px] text-[12px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {couponLoading ? "..." : "Apply"}
+                      </button>
+                    </div>
+
+                    {/* Error */}
+                    {couponError && (
+                      <p className="mt-2 text-[11px] text-red-500">
+                        {couponError}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  /* Applied Coupon */
+                  <div className="flex items-center justify-between gap-3 rounded-[11px] border border-green-200 bg-green-50 px-3 py-[11px]">
+                    <div className="flex min-w-0 items-center gap-[9px] text-green-600">
+                      <Check size={15} className="shrink-0" />
+
+                      <div className="flex min-w-0 flex-col">
+                        <strong className="text-[12px] tracking-[0.4px] text-green-700">
+                          {appliedCoupon.code}
+                        </strong>
+
+                        <span className="mt-[2px] text-[10px] text-lime-600">
+                          Coupon applied successfully
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                        setCouponError("");
+                      }}
+                      className="shrink-0 border-0 bg-transparent p-1 text-[10px] font-bold text-red-500 transition hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* PRICING SECTION */}
               <div className="pricing-box">
                 <div className="line">
@@ -1272,13 +1522,25 @@ export default function CheckoutPage() {
 
                 <div className="line">
                   <span>Estimated GST (18%)</span>
-                  <span>₹{gstAmount}</span>
+                  <span>₹{gstAmount.toFixed(1)}</span>
                 </div>
 
                 <div className="line">
                   <span>Shipping</span>
                   <span className="green">FREE</span>
                 </div>
+
+                {appliedCoupon && couponDiscount > 0 && (
+                  <div className="line">
+                    <span className="text-green-600">
+                      Coupon Discount
+                    </span>
+
+                    <span className="text-green-600 font-semibold">
+                      -₹{couponDiscount}
+                    </span>
+                  </div>
+                )}
 
                 <div className="total-divider"></div>
 
