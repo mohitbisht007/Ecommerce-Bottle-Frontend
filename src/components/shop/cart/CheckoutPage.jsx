@@ -624,7 +624,6 @@ export default function CheckoutPage() {
             code: couponCode.trim(),
             items: cartItems,
             cartTotal,
-            couponCode: appliedCoupon?.code || null,
           }),
         }
       );
@@ -662,67 +661,67 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-  if (!appliedCoupon) return;
+    if (!appliedCoupon) return;
 
-  const totalItems = cartItems.reduce(
-    (total, item) => total + Number(item.quantity || 0),
-    0
-  );
+    const totalItems = cartItems.reduce(
+      (total, item) => total + Number(item.quantity || 0),
+      0
+    );
 
-  const currentCartTotal = Number(cartTotal);
+    const currentCartTotal = Number(cartTotal);
 
-  const minimumItems = Number(
-    appliedCoupon.minimumItems || 1
-  );
+    const minimumItems = Number(
+      appliedCoupon.minimumItems || 1
+    );
 
-  const minimumCartValue = Number(
-    appliedCoupon.minimumCartValue || 0
-  );
+    const minimumCartValue = Number(
+      appliedCoupon.minimumCartValue || 0
+    );
 
-  // Cart no longer qualifies
-  if (
-    totalItems < minimumItems ||
-    currentCartTotal < minimumCartValue
-  ) {
-    setAppliedCoupon(null);
-    setCouponCode("");
-    setCouponError("");
-
-    toast.error("Coupon removed — cart no longer qualifies.");
-
-    return;
-  }
-
-  // Recalculate discount using CURRENT cart total
-  let discount = 0;
-
-  if (appliedCoupon.discountType === "percentage") {
-    discount =
-      (currentCartTotal * Number(appliedCoupon.discountValue)) / 100;
-
+    // Cart no longer qualifies
     if (
-      appliedCoupon.maximumDiscount !== null &&
-      discount > Number(appliedCoupon.maximumDiscount)
+      totalItems < minimumItems ||
+      currentCartTotal < minimumCartValue
     ) {
-      discount = Number(appliedCoupon.maximumDiscount);
+      setAppliedCoupon(null);
+      setCouponCode("");
+      setCouponError("");
+
+      toast.error("Coupon removed — cart no longer qualifies.");
+
+      return;
     }
-  }
 
-  if (appliedCoupon.discountType === "fixed") {
-    discount = Number(appliedCoupon.discountValue);
-  }
+    // Recalculate discount using CURRENT cart total
+    let discount = 0;
 
-  // Never discount more than the cart
-  discount = Math.min(discount, currentCartTotal);
+    if (appliedCoupon.discountType === "percentage") {
+      discount =
+        (currentCartTotal * Number(appliedCoupon.discountValue)) / 100;
 
-  const finalAmount = currentCartTotal - discount;
+      if (
+        appliedCoupon.maximumDiscount !== null &&
+        discount > Number(appliedCoupon.maximumDiscount)
+      ) {
+        discount = Number(appliedCoupon.maximumDiscount);
+      }
+    }
 
-  setAppliedCoupon((prev) => ({
-    ...prev,
-    discount,
-    finalAmount,
-  }));
-}, [cartItems, cartTotal]);
+    if (appliedCoupon.discountType === "fixed") {
+      discount = Number(appliedCoupon.discountValue);
+    }
+
+    // Never discount more than the cart
+    discount = Math.min(discount, currentCartTotal);
+
+    const finalAmount = currentCartTotal - discount;
+
+    setAppliedCoupon((prev) => ({
+      ...prev,
+      discount,
+      finalAmount,
+    }));
+  }, [cartItems, cartTotal]);
 
   const handleRazorpay = async () => {
     setLoading(true);
@@ -757,8 +756,9 @@ export default function CheckoutPage() {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           items: cartItems,
-          address: addressToSend, // Now contains 'name' and 'zip'
-          email: userEmail
+          address: addressToSend,
+          email: userEmail,
+          couponCode: appliedCoupon?.code || null,
         }),
       });
 
