@@ -29,12 +29,23 @@ export default function ProductOptions({
 
             const isSelected = selectedVarIdx === i;
 
+            // Entire variant is OOS only when
+            // ALL of its capacities have 0 stock.
+            const isVariantOutOfStock =
+              !v.sizes?.some(
+                (size) => Number(size.stock || 0) > 0
+              );
+
             return (
               <button
                 key={`${product._id}-${v.colorName}-${i}`}
                 type="button"
                 aria-label={`Select ${v.colorName}`}
-                title={v.colorName}
+                title={
+                  isVariantOutOfStock
+                    ? `${v.colorName} - Out of Stock`
+                    : v.colorName
+                }
                 className={`
                   relative
                   w-[76px]
@@ -49,6 +60,7 @@ export default function ProductOptions({
                   ease-out
 
                   border-2
+
                   ${
                     isSelected
                       ? "border-violet-600 ring-2 ring-violet-100"
@@ -56,33 +68,52 @@ export default function ProductOptions({
                   }
 
                   ${
-                    isSelected
-                      ? "shadow-md"
-                      : "shadow-sm hover:shadow-md"
+                    isVariantOutOfStock
+                      ? "opacity-55 grayscale-[35%]"
+                      : ""
                   }
 
                   ${
                     isSelected
-                      ? "scale-[1.03]"
-                      : "hover:-translate-y-0.5"
+                      ? "shadow-md scale-[1.03]"
+                      : "shadow-sm hover:shadow-md hover:-translate-y-0.5"
                   }
                 `}
                 onClick={() => {
+                  /*
+                   * IMPORTANT:
+                   * Even if the variant is completely OOS,
+                   * we STILL select it.
+                   *
+                   * This allows PurchaseControls to show
+                   * "Notify Me".
+                   */
                   setSelectedVarIdx(i);
-
                   setSelectedColor(v.colorName);
 
-                  // Auto-select first available size
+                  /*
+                   * If variant has stock:
+                   * select first available capacity.
+                   *
+                   * If variant is completely OOS:
+                   * select the first capacity so the user
+                   * can request notification for it.
+                   */
                   if (v.sizes?.length > 0) {
                     const firstAvailableSize = v.sizes.find(
-                      (size) => (size.stock || 0) > 0
+                      (size) =>
+                        Number(size.stock || 0) > 0
                     );
 
-                    if (firstAvailableSize) {
-                      setSelectedCapacity(
-                        firstAvailableSize.capacity
-                      );
-                    }
+                    const capacityToSelect =
+                      firstAvailableSize ||
+                      v.sizes[0];
+
+                    setSelectedCapacity(
+                      capacityToSelect.capacity
+                    );
+                  } else {
+                    setSelectedCapacity("");
                   }
 
                   setActiveImgIdx(0);
@@ -105,6 +136,57 @@ export default function ProductOptions({
                     block
                   "
                 />
+
+                {/* ================= OOS OVERLAY ================= */}
+                {isVariantOutOfStock && (
+                  <span className="pointer-events-none absolute inset-0">
+                    {/* Soft fade */}
+                    <span
+                      className="
+                        absolute
+                        inset-0
+                        bg-white/35
+                      "
+                    />
+
+                    {/* Elegant diagonal strike */}
+                    <span
+                      className="
+                        absolute
+                        left-[-12%]
+                        top-1/2
+                        h-[1.5px]
+                        w-[124%]
+                        -translate-y-1/2
+                        rotate-[-28deg]
+                        bg-slate-500/60
+                      "
+                    />
+
+                    {/* Sold out pill */}
+                    <span
+                      className="
+                        absolute
+                        bottom-1
+                        left-1/2
+                        -translate-x-1/2
+                        whitespace-nowrap
+                        rounded-full
+                        bg-white/90
+                        px-2
+                        py-0.5
+                        text-[8px]
+                        font-semibold
+                        uppercase
+                        tracking-wide
+                        text-slate-500
+                        shadow-sm
+                      "
+                    >
+                      Sold out
+                    </span>
+                  </span>
+                )}
 
                 {/* Selected indicator */}
                 {isSelected && (
@@ -144,39 +226,106 @@ export default function ProductOptions({
 
         <div className="capacity-grid">
           {availableCapacities.map((sizeObj, index) => {
-            const vStock = sizeObj.stock || 0;
+            const vStock = Number(sizeObj.stock || 0);
             const isOutOfStock = vStock <= 0;
+            const isSelected =
+              selectedCapacity === sizeObj.capacity;
 
             return (
               <button
                 key={`size-${sizeObj.capacity}-${index}`}
                 type="button"
-                className={`size-card ${
-                  selectedCapacity === sizeObj.capacity
-                    ? "active"
-                    : ""
-                } ${
-                  isOutOfStock
-                    ? "disabled"
-                    : ""
-                }`}
-                onClick={() =>
-                  !isOutOfStock &&
-                  setSelectedCapacity(sizeObj.capacity)
-                }
-                disabled={isOutOfStock}
-              >
-                <span className="size-val">
-                  {sizeObj.capacity}
-                </span>
+                className={`
+                  size-card
+                  relative
+                  overflow-hidden
+                  transition-all
+                  duration-200
 
-                <span className="size-sub">
-                  {isOutOfStock
-                    ? "Out of Stock"
-                    : vStock <= 5
-                    ? `Only ${vStock} left`
-                    : "Available"}
-                </span>
+                  ${isSelected ? "active" : ""}
+
+                  ${
+                    isOutOfStock
+                      ? "out-of-stock"
+                      : ""
+                  }
+                `}
+                onClick={() => {
+                  /*
+                   * OOS capacities remain clickable.
+                   * This is important for Notify Me.
+                   */
+                  setSelectedCapacity(
+                    sizeObj.capacity
+                  );
+                }}
+              >
+                {/* Capacity information */}
+                <div
+                  className={`
+                    relative
+                    z-10
+                    transition-opacity
+                    duration-200
+
+                    ${
+                      isOutOfStock
+                        ? "opacity-60"
+                        : ""
+                    }
+                  `}
+                >
+                  <span className="size-val">
+                    {sizeObj.capacity}
+                  </span>
+                </div>
+
+                {/* OOS diagonal */}
+                {isOutOfStock && (
+                  <span
+                    className="
+                      pointer-events-none
+                      absolute
+                      inset-0
+                      z-20
+                      overflow-hidden
+                    "
+                  >
+                    <span
+                      className="
+                        absolute
+                        left-[-8%]
+                        top-1/2
+                        h-px
+                        w-[116%]
+                        -translate-y-1/2
+                        rotate-[-14deg]
+                        bg-slate-400/60
+                      "
+                    />
+                  </span>
+                )}
+
+                {/* Selected indicator */}
+                {isSelected && (
+                  <span
+                    className={`
+                      absolute
+                      bottom-2
+                      right-2
+                      z-30
+                      h-1.5
+                      w-1.5
+                      rounded-full
+
+                      ${
+                        isOutOfStock
+                          ? "bg-slate-400"
+                          : "bg-violet-600"
+                      }
+                    `}
+                  />
+                )}
               </button>
             );
           })}

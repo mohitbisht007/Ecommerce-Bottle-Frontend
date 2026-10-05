@@ -9,7 +9,7 @@ export default function AdminSidebar() {
   const menuItems = [
     { label: 'Orders', path: '/admin/orders', icon: '📦' },
     { label: 'Products', path: '/admin/products', icon: '🍾' },
-    { label: 'Customers', path: '/admin/users', icon: '👥' },
+    { label: 'Customers', path: '/admin/customers', icon: '👥' },
     { label: 'Storefront', path: '/admin/settings', icon: '🎨' },
   ];
 
