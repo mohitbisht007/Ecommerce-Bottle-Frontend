@@ -44,11 +44,11 @@ export default function ModalManager() {
         <>
           Pick any <strong>2 bottles</strong> and unlock
           <br />
-          <strong>15% OFF</strong> instantly.
+          <strong>10% OFF</strong> instantly.
         </>
       }
-      couponCode="BOTTLE15"
-      primaryBtnText="Shop & Save 15%"
+      couponCode="BOTTLE10"
+      primaryBtnText="Shop & Save 10%"
       onPrimaryClick={handleShopNow}
       secondaryBtnText="Maybe later"
     />

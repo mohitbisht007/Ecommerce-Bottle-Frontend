@@ -129,7 +129,7 @@ export default function GenericModal({
                 and unlock
                 <br />
                 <strong className="font-bold text-[#171717]">
-                  15% OFF
+                  10% OFF
                 </strong>{" "}
                 instantly.
               </>
@@ -193,7 +193,7 @@ export default function GenericModal({
             className="mt-4 flex h-[48px] w-full items-center justify-between rounded-[11px] bg-[#111] pl-5 pr-1.5 text-[13px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-[#202020] hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] active:translate-y-0"
           >
             <span className="flex-1">
-              {primaryBtnText || "Shop & Save 15%"}
+              {primaryBtnText || "Shop & Save 10%"}
             </span>
 
             <span className="flex h-[35px] w-[35px] items-center justify-center rounded-[8px] bg-white text-[#111]">
