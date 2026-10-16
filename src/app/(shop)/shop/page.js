@@ -1,69 +1,83 @@
+
 import ShopClient from "@/components/shop/catalog/ShopClient";
 
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams;
-  const category = params.category || "";
+  const category = params?.category || "";
 
   return {
     title: category
-      ? `${category.charAt(0).toUpperCase() + category.slice(1)
-      } Water Bottles | BouncyBucket`
+      ? `${category} Water Bottles | BouncyBucket`
       : "Shop All Collections | BouncyBucket",
-    description: `Browse our ${category || "premium"
-      } collection of eco-friendly water bottles. Filter by price, size, and color.`,
+    description:
+      "Discover premium water bottles. Filter by price, color, capacity, material and features.",
   };
 }
 
 async function getShopData(searchParams) {
   const params = await searchParams;
-  const queryString = new URLSearchParams(params).toString();
+  const query = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((item) => query.append(key, item));
+    } else if (value != null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // 1. Safety Check: If URL is missing, don't even try
+  const fallback = {
+    products: [],
+    categories: [],
+    filters: {
+      colors: [],
+      capacities: [],
+      materials: [],
+      maxPrice: 5000,
+    },
+    totalPages: 1,
+    currentPage: 1,
+    totalProducts: 0,
+  };
+
   if (!apiUrl) {
-    console.error("API URL is missing in Environment Variables!");
-    return { products: [], categories: [] };
+    console.error("NEXT_PUBLIC_API_URL is not configured.");
+    return fallback;
   }
 
   try {
-    const [productsRes, categoriesRes] = await Promise.all([
-      fetch(`${apiUrl}/products?${queryString}`, { cache: "no-store" }),
-      fetch(`${apiUrl}/categories`, { cache: "no-store" }),
+    const [productsResponse, categoriesResponse] = await Promise.all([
+      fetch(`${apiUrl}/products?${query.toString()}`, {
+        cache: "no-store",
+      }),
+      fetch(`${apiUrl}/categories`, {
+        cache: "no-store",
+      }),
     ]);
 
-    // 2. Content-Type Check: Ensure we actually got JSON
-    const isProductsJson = productsRes.headers
-      .get("content-type")
-      ?.includes("application/json");
-    const isCategoriesJson = categoriesRes.headers
-      .get("content-type")
-      ?.includes("application/json");
-
-    if (!isProductsJson || !isCategoriesJson) {
-      console.warn(
-        "API returned HTML instead of JSON (possibly Render sleeping). Returning empty data for build."
-      );
-      return { products: [], categories: [] };
+    if (!productsResponse.ok || !categoriesResponse.ok) {
+      console.error("Shop API request failed.");
+      return fallback;
     }
 
-    const productsData = await productsRes.json();
-    const categoriesData = await categoriesRes.json();
+    const [productsData, categoriesData] = await Promise.all([
+      productsResponse.json(),
+      categoriesResponse.json(),
+    ]);
 
     return {
       products: productsData.items || [],
       categories: categoriesData.categories || [],
+      filters: productsData.filters || fallback.filters,
       totalPages: productsData.pages || 1,
-
-      currentPage:
-        Number(productsData.page) || 1,
-
-      totalProducts:
-        productsData.total || 0,
+      currentPage: Number(productsData.page) || 1,
+      totalProducts: productsData.total || 0,
     };
   } catch (error) {
-    // 3. Graceful Failure: Build continues even if API is down
-    console.error("Fetch failed during build:", error.message);
-    return { products: [], categories: [] };
+    console.error("Failed to load shop data:", error);
+    return fallback;
   }
 }
 
@@ -71,17 +85,20 @@ export default async function ShopPage({ searchParams }) {
   const {
     products,
     categories,
+    filters,
     totalPages,
     currentPage,
-    totalProducts
+    totalProducts,
   } = await getShopData(searchParams);
 
   return (
     <ShopClient
       initialProducts={products}
       availableCategories={categories}
+      availableFilters={filters}
       totalPages={totalPages}
       currentPage={currentPage}
-      totalProducts={totalProducts} />
+      totalProducts={totalProducts}
+    />
   );
 }

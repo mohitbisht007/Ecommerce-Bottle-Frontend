@@ -86,7 +86,7 @@ export default function GenericModal({
           {/* Discount */}
           <div className="relative z-10 flex h-[64px] items-start leading-none">
             <span className="bg-gradient-to-b from-white to-[#f5d56b] bg-clip-text text-[64px] font-black tracking-[-5px] text-transparent">
-              15
+              10
             </span>
 
             <span className="mt-2 text-[24px] font-extrabold text-[#f5d56b]">

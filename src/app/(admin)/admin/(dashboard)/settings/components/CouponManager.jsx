@@ -126,12 +126,8 @@ export default function CouponManager() {
       maximumDiscount: coupon.maximumDiscount ?? "",
       usageLimit: coupon.usageLimit ?? "",
       perUserLimit: coupon.perUserLimit ?? 1,
-      startDate: coupon.startDate
-        ? new Date(coupon.startDate).toISOString().slice(0, 16)
-        : "",
-      expiryDate: coupon.expiryDate
-        ? new Date(coupon.expiryDate).toISOString().slice(0, 16)
-        : "",
+      startDate: toLocalDateTimeInput(coupon.startDate),
+      expiryDate: toLocalDateTimeInput(coupon.expiryDate),
       isActive: coupon.isActive !== false,
       showOnCart: coupon.showOnCart === true,
     });
@@ -405,10 +401,10 @@ export default function CouponManager() {
               key={coupon._id}
               className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+              <div className="grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(80px,0.65fr)_minmax(100px,0.9fr)_minmax(75px,0.65fr)_minmax(100px,0.85fr)_auto] xl:items-center">
                 {/* Coupon identity */}
 
-                <div className="flex items-center gap-3 min-w-0 lg:w-64">
+                <div className="col-span-2 flex min-w-0 items-center gap-3 sm:col-span-2 xl:col-span-1">
                   <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                     <TicketPercent size={19} />
                   </div>
@@ -440,7 +436,7 @@ export default function CouponManager() {
 
                 {/* Discount */}
 
-                <div className="lg:w-32">
+                <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                     Discount
                   </p>
@@ -452,7 +448,7 @@ export default function CouponManager() {
 
                 {/* Condition */}
 
-                <div className="lg:w-40">
+                <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                     Condition
                   </p>
@@ -472,7 +468,7 @@ export default function CouponManager() {
 
                 {/* Usage */}
 
-                <div className="lg:w-32">
+                <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                     Usage
                   </p>
@@ -489,7 +485,7 @@ export default function CouponManager() {
 
                 {/* Expiry */}
 
-                <div className="flex-1">
+                <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                     Expiry
                   </p>
@@ -502,7 +498,7 @@ export default function CouponManager() {
 
                 {/* Actions */}
 
-                <div className="flex items-center gap-2">
+                <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 sm:col-span-1 xl:col-span-1">
                   <button
                     onClick={() => toggleStatus(coupon)}
                     className={`px-3 py-2.5 border rounded-lg text-[10px] font-bold transition ${coupon.isActive
@@ -538,11 +534,11 @@ export default function CouponManager() {
       {/* ================= CREATE / EDIT MODAL ================= */}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] grid place-items-center overflow-y-auto overscroll-contain bg-slate-950/50 p-3 backdrop-blur-sm sm:p-4">
+          <div className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
             {/* Modal Header */}
 
-            <header className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
                   {editingCoupon ? (
@@ -574,12 +570,12 @@ export default function CouponManager() {
 
             {/* Form */}
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
               {/* Code + Description */}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                     Coupon Code
                   </label>
 
@@ -590,12 +586,12 @@ export default function CouponManager() {
                     required
                     disabled={!!editingCoupon}
                     placeholder="BOTTLE20"
-                    className="w-full text-xs font-mono uppercase border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 disabled:bg-slate-50 disabled:text-slate-400"
+                    className="w-full text-xs font-mono uppercase border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 disabled:bg-slate-50 disabled:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                     Description
                   </label>
 
@@ -604,21 +600,21 @@ export default function CouponManager() {
                     value={form.description}
                     onChange={handleChange}
                     placeholder="20% off on 2+ bottles"
-                    className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                    className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                   />
                 </div>
               </div>
 
               {/* Discount */}
 
-              <div className="border-t border-slate-100 pt-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                   Discount
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Discount Type
                     </label>
 
@@ -626,7 +622,7 @@ export default function CouponManager() {
                       name="discountType"
                       value={form.discountType}
                       onChange={handleChange}
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     >
                       <option value="percentage">
                         Percentage (%)
@@ -636,7 +632,7 @@ export default function CouponManager() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Discount Value
                     </label>
 
@@ -657,7 +653,7 @@ export default function CouponManager() {
                           ? "20"
                           : "200"
                       }
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
                 </div>
@@ -665,14 +661,14 @@ export default function CouponManager() {
 
               {/* Conditions */}
 
-              <div className="border-t border-slate-100 pt-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                   Conditions
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Minimum Bottles
                     </label>
 
@@ -682,12 +678,12 @@ export default function CouponManager() {
                       min="1"
                       value={form.minimumItems}
                       onChange={handleChange}
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Minimum Cart Value
                     </label>
 
@@ -698,12 +694,12 @@ export default function CouponManager() {
                       value={form.minimumCartValue}
                       onChange={handleChange}
                       placeholder="0"
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Maximum Discount
                     </label>
 
@@ -714,7 +710,7 @@ export default function CouponManager() {
                       value={form.maximumDiscount}
                       onChange={handleChange}
                       placeholder="No limit"
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
 
                     <p className="text-[9px] text-slate-400 mt-1">
@@ -723,7 +719,7 @@ export default function CouponManager() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Per User Limit
                     </label>
 
@@ -733,7 +729,7 @@ export default function CouponManager() {
                       min="1"
                       value={form.perUserLimit}
                       onChange={handleChange}
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
                 </div>
@@ -741,14 +737,14 @@ export default function CouponManager() {
 
               {/* Usage */}
 
-              <div className="border-t border-slate-100 pt-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                   Usage & Validity
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Total Usage Limit
                     </label>
 
@@ -759,12 +755,12 @@ export default function CouponManager() {
                       value={form.usageLimit}
                       onChange={handleChange}
                       placeholder="Unlimited"
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Start Date
                     </label>
 
@@ -773,12 +769,12 @@ export default function CouponManager() {
                       type="datetime-local"
                       value={form.startDate}
                       onChange={handleChange}
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Expiry Date
                     </label>
 
@@ -787,7 +783,7 @@ export default function CouponManager() {
                       type="datetime-local"
                       value={form.expiryDate}
                       onChange={handleChange}
-                      className="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                     />
                   </div>
 
@@ -852,12 +848,12 @@ export default function CouponManager() {
 
               {/* Actions */}
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex justify-end gap-2 border-t border-slate-100 bg-white pt-3">
                 <button
                   type="button"
                   onClick={closeModal}
                   disabled={loading}
-                  className="px-4 py-2.5 text-xs font-bold border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-bold border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -865,7 +861,7 @@ export default function CouponManager() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg shadow-sm transition"
+                  className="flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg shadow-sm transition"
                 >
                   {loading ? (
                     <>

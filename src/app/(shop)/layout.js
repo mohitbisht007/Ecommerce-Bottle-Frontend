@@ -29,7 +29,7 @@ export default async function ShopLayout({ children }) {
       < DeliveryContextBar />
       <Breadcrumbs />
       <main style={{ minHeight: '80vh' }}>
-        <ModalManager/>
+        {/* <ModalManager/> */}
         {children}
       </main>
       <Footer />
