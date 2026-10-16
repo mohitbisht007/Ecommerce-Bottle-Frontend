@@ -98,6 +98,21 @@ export default function CouponManager() {
     setShowModal(true);
   };
 
+  const toLocalDateTimeInput = (date) => {
+    if (!date) return "";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) return "";
+
+    const localDate = new Date(
+      parsedDate.getTime() -
+      parsedDate.getTimezoneOffset() * 60 * 1000
+    );
+
+    return localDate.toISOString().slice(0, 16);
+  };
+
   const openEditModal = (coupon) => {
     setEditingCoupon(coupon);
 
@@ -173,8 +188,13 @@ export default function CouponManager() {
         usageLimit:
           form.usageLimit === "" ? null : Number(form.usageLimit),
         perUserLimit: Number(form.perUserLimit) || 1,
-        startDate: form.startDate || null,
-        expiryDate: form.expiryDate || null,
+        startDate: form.startDate
+          ? new Date(form.startDate).toISOString()
+          : null,
+
+        expiryDate: form.expiryDate
+          ? new Date(form.expiryDate).toISOString()
+          : null,
         isActive: form.isActive,
         showOnCart: form.showOnCart,
       };
@@ -776,8 +796,8 @@ export default function CouponManager() {
                     {/* COUPON ACTIVE */}
                     <label
                       className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition ${form.isActive
-                          ? "border-emerald-200 bg-emerald-50/60"
-                          : "border-slate-200 bg-white"
+                        ? "border-emerald-200 bg-emerald-50/60"
+                        : "border-slate-200 bg-white"
                         }`}
                     >
                       <input
@@ -803,8 +823,8 @@ export default function CouponManager() {
                     {/* SHOW ON CART */}
                     <label
                       className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition ${form.showOnCart
-                          ? "border-blue-200 bg-blue-50/60"
-                          : "border-slate-200 bg-white"
+                        ? "border-blue-200 bg-blue-50/60"
+                        : "border-slate-200 bg-white"
                         }`}
                     >
                       <input
