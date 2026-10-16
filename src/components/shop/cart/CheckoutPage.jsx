@@ -55,7 +55,21 @@ const INDIAN_STATES = [
 
 export default function CheckoutPage() {
   const [hasMounted, setHasMounted] = useState(false);
-  const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
+  const {
+    cartItems,
+    cartTotal,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    availableCoupons,
+    loadingCoupons,
+    fetchAvailableCoupons,
+    couponDiscount,
+    finalTotal,
+  } = useCart();
   const router = useRouter();
 
   const [step, setStep] = useState(1);
@@ -65,7 +79,6 @@ export default function CheckoutPage() {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState("");
 
@@ -215,58 +228,14 @@ export default function CheckoutPage() {
   };
 
   const gstRate = 0.18;
-
-  const couponDiscount = appliedCoupon
-    ? Number(appliedCoupon.discount || 0)
-    : 0;
-
-  const discountedTotal = Math.max(
-    0,
-    cartTotal - couponDiscount
-  );
-
-  const finalTotal = discountedTotal;
-
+  const gstAmount = finalTotal - Math.round(finalTotal / (1 + gstRate));
   const basePrice = Math.round(finalTotal / (1 + gstRate));
-  const gstAmount = finalTotal - basePrice;
-
-  useEffect(() => {
-    if (!appliedCoupon) return;
-
-    const totalItems = cartItems.reduce(
-      (total, item) => total + Number(item.quantity || 0),
-      0
-    );
-
-    const currentCartTotal = Number(cartTotal);
-
-    const minimumItems = Number(
-      appliedCoupon.minimumItems || 1
-    );
-
-    const minimumCartValue = Number(
-      appliedCoupon.minimumCartValue || 0
-    );
-
-    if (
-      totalItems < minimumItems ||
-      currentCartTotal < minimumCartValue
-    ) {
-      setAppliedCoupon(null);
-      setCouponCode("");
-
-      setCouponError(
-        `Coupon removed because your cart no longer meets the requirements.`
-      );
-
-      toast.error("Coupon removed — cart no longer qualifies.");
-    }
-  }, [cartItems, cartTotal, appliedCoupon]);
 
 
   useEffect(() => {
     setHasMounted(true);
     document.title = "Checkout | BouncyBucket";
+    fetchAvailableCoupons();
 
     const token = localStorage.getItem("token");
     const storedUser = JSON.parse(localStorage.getItem("bottle_user") || "{}");
@@ -606,122 +575,23 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+  const handleApplyCoupon = async (code = couponCode) => {
+    if (!String(code).trim()) return;
 
     setCouponLoading(true);
     setCouponError("");
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/coupons/validate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code: couponCode.trim(),
-            items: cartItems,
-            cartTotal,
-          }),
-        }
-      );
+    const result = await applyCoupon(code);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Unable to apply coupon");
-      }
-
-      setAppliedCoupon({
-        code: data.coupon.code,
-        discount: Number(data.discount),
-        finalAmount: Number(data.finalAmount),
-        discountType: data.coupon.discountType,
-        discountValue: Number(data.coupon.discountValue),
-        minimumItems: Number(data.coupon.minimumItems || 1),
-        minimumCartValue: Number(data.coupon.minimumCartValue || 0),
-        maximumDiscount:
-          data.coupon.maximumDiscount !== null &&
-            data.coupon.maximumDiscount !== undefined
-            ? Number(data.coupon.maximumDiscount)
-            : null,
-      });
-
-      setCouponError("");
-      toast.success("Coupon applied successfully!");
-    } catch (error) {
-      setAppliedCoupon(null);
-      setCouponError(error.message || "Invalid coupon code");
-      toast.error(error.message || "Invalid coupon code");
-    } finally {
-      setCouponLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!appliedCoupon) return;
-
-    const totalItems = cartItems.reduce(
-      (total, item) => total + Number(item.quantity || 0),
-      0
-    );
-
-    const currentCartTotal = Number(cartTotal);
-
-    const minimumItems = Number(
-      appliedCoupon.minimumItems || 1
-    );
-
-    const minimumCartValue = Number(
-      appliedCoupon.minimumCartValue || 0
-    );
-
-    // Cart no longer qualifies
-    if (
-      totalItems < minimumItems ||
-      currentCartTotal < minimumCartValue
-    ) {
-      setAppliedCoupon(null);
+    if (!result.success) {
+      setCouponError(result.message || "Invalid coupon code");
+      toast.error(result.message || "Invalid coupon code");
+    } else {
       setCouponCode("");
-      setCouponError("");
-
-      toast.error("Coupon removed — cart no longer qualifies.");
-
-      return;
     }
 
-    // Recalculate discount using CURRENT cart total
-    let discount = 0;
-
-    if (appliedCoupon.discountType === "percentage") {
-      discount =
-        (currentCartTotal * Number(appliedCoupon.discountValue)) / 100;
-
-      if (
-        appliedCoupon.maximumDiscount !== null &&
-        discount > Number(appliedCoupon.maximumDiscount)
-      ) {
-        discount = Number(appliedCoupon.maximumDiscount);
-      }
-    }
-
-    if (appliedCoupon.discountType === "fixed") {
-      discount = Number(appliedCoupon.discountValue);
-    }
-
-    // Never discount more than the cart
-    discount = Math.min(discount, currentCartTotal);
-
-    const finalAmount = currentCartTotal - discount;
-
-    setAppliedCoupon((prev) => ({
-      ...prev,
-      discount,
-      finalAmount,
-    }));
-  }, [cartItems, cartTotal]);
+    setCouponLoading(false);
+  };
 
   const handleRazorpay = async () => {
     setLoading(true);
@@ -1052,6 +922,9 @@ export default function CheckoutPage() {
                         <h3>{item.title}</h3>
                         <p>
                           {item.color} / {item.capacity}
+                          {item.customization?.text
+                            ? ` • Engraved: ${item.customization.text}`
+                            : ""}
                         </p>
                         <div className="qty-wrap">
                           <button onClick={() => updateQuantity(i, -1)}>
@@ -1480,6 +1353,53 @@ export default function CheckoutPage() {
                         {couponError}
                       </p>
                     )}
+
+                    {(loadingCoupons || availableCoupons.length > 0) && (
+                      <div className="mt-3 space-y-2">
+                        {loadingCoupons ? (
+                          <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
+                        ) : (
+                          availableCoupons.map((coupon) => {
+                            const totalQty = cartItems.reduce(
+                              (sum, item) => sum + Number(item.quantity || 0),
+                              0
+                            );
+                            const eligible =
+                              totalQty >= Number(coupon.minimumItems || 1) &&
+                              cartTotal >= Number(coupon.minimumCartValue || 0);
+
+                            return (
+                              <button
+                                key={coupon.code}
+                                type="button"
+                                disabled={!eligible || couponLoading}
+                                onClick={() => handleApplyCoupon(coupon.code)}
+                                className="flex w-full items-center justify-between rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-left disabled:opacity-45"
+                              >
+                                <span>
+                                  <strong className="block text-[11px] tracking-wide text-slate-800">
+                                    {coupon.code}
+                                  </strong>
+                                  <span className="text-[10px] text-slate-500">
+                                    {coupon.discountType === "percentage"
+                                      ? `${coupon.discountValue}% OFF`
+                                      : `₹${coupon.discountValue} OFF`}
+                                    {!eligible
+                                      ? " • Add more to unlock"
+                                      : coupon.description
+                                        ? ` • ${coupon.description}`
+                                        : ""}
+                                  </span>
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-900">
+                                  Apply
+                                </span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
                   </>
                 ) : (
                   /* Applied Coupon */
@@ -1501,7 +1421,7 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setAppliedCoupon(null);
+                        removeCoupon();
                         setCouponCode("");
                         setCouponError("");
                       }}
@@ -1516,24 +1436,14 @@ export default function CheckoutPage() {
               {/* PRICING SECTION */}
               <div className="pricing-box">
                 <div className="line">
-                  <span>Price (Excl. GST)</span>
-                  <span>₹{basePrice}</span>
-                </div>
-
-                <div className="line">
-                  <span>Estimated GST (18%)</span>
-                  <span>₹{gstAmount.toFixed(1)}</span>
-                </div>
-
-                <div className="line">
-                  <span>Shipping</span>
-                  <span className="green">FREE</span>
+                  <span>Subtotal</span>
+                  <span>₹{cartTotal}</span>
                 </div>
 
                 {appliedCoupon && couponDiscount > 0 && (
                   <div className="line">
                     <span className="text-green-600">
-                      Coupon Discount
+                      Coupon ({appliedCoupon.code})
                     </span>
 
                     <span className="text-green-600 font-semibold">
@@ -1541,6 +1451,16 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 )}
+
+                <div className="line">
+                  <span>Shipping</span>
+                  <span className="green">FREE</span>
+                </div>
+
+                <div className="line">
+                  <span>GST (included)</span>
+                  <span>₹{gstAmount.toFixed(2)}</span>
+                </div>
 
                 <div className="total-divider"></div>
 

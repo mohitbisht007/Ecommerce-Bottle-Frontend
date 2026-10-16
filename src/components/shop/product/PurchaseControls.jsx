@@ -25,8 +25,10 @@ export default function PurchaseControls({
         <span>{quantity}</span>
 
         <button
-          onClick={() => setQuantity(quantity + 1)}
-          disabled={isOutOfStock}
+          onClick={() =>
+            setQuantity(Math.min(variantStock || quantity + 1, quantity + 1))
+          }
+          disabled={isOutOfStock || quantity >= variantStock}
         >
           +
         </button>

@@ -2,7 +2,6 @@ import AnnouncementBar from "@/components/shop/layout/AnnouncementBar";
 import Breadcrumbs from "@/components/shop/layout/Breadcrumbs";
 import Footer from "@/components/shop/layout/Footer";
 import Header from "@/components/shop/layout/Header";
-import OfferModal from "@/components/ui/OfferModal";
 import "../globals.css"
 import ModalManager from "@/components/ui/ModalManager";
 import DeliveryContextBar from "@/components/shop/layout/DeliveryContextBar";

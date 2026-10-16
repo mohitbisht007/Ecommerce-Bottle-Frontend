@@ -90,8 +90,11 @@ export default function FullScreenReelModal({ reels, initialIdx, onClose, conver
 
   const executeAdd = (e) => {
     e.preventDefault();
-    const color = product.variants?.[0]?.colorName || "Default";
-    const capacity = product.variants?.[0]?.capacities?.[0]?.capacity || "Standard";
+    const color = product.variants?.[0]?.colorName || product.variants?.[0]?.baseColorName || "Default";
+    const capacity =
+      product.variants?.[0]?.sizes?.[0]?.capacity ||
+      product.variants?.[0]?.capacities?.[0]?.capacity ||
+      "Standard";
     addToCart(product, 1, color, capacity);
   };
 

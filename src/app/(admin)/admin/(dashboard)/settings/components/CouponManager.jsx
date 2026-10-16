@@ -34,6 +34,7 @@ export default function CouponManager() {
     startDate: "",
     expiryDate: "",
     isActive: true,
+    showOnCart: true,
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -117,6 +118,7 @@ export default function CouponManager() {
         ? new Date(coupon.expiryDate).toISOString().slice(0, 16)
         : "",
       isActive: coupon.isActive !== false,
+      showOnCart: coupon.showOnCart === true,
     });
 
     setShowModal(true);
@@ -174,6 +176,7 @@ export default function CouponManager() {
         startDate: form.startDate || null,
         expiryDate: form.expiryDate || null,
         isActive: form.isActive,
+        showOnCart: form.showOnCart,
       };
 
       const url = editingCoupon
@@ -482,11 +485,10 @@ export default function CouponManager() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleStatus(coupon)}
-                    className={`px-3 py-2.5 border rounded-lg text-[10px] font-bold transition ${
-                      coupon.isActive
-                        ? "border-amber-200 text-amber-700 hover:bg-amber-50"
-                        : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    }`}
+                    className={`px-3 py-2.5 border rounded-lg text-[10px] font-bold transition ${coupon.isActive
+                      ? "border-amber-200 text-amber-700 hover:bg-amber-50"
+                      : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                      }`}
                   >
                     {coupon.isActive ? "Deactivate" : "Activate"}
                   </button>
@@ -769,20 +771,61 @@ export default function CouponManager() {
                     />
                   </div>
 
-                  <div className="flex items-end">
-                    <label className="flex items-center gap-2 cursor-pointer border border-slate-200 rounded-lg px-3 py-2.5 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    {/* COUPON ACTIVE */}
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition ${form.isActive
+                          ? "border-emerald-200 bg-emerald-50/60"
+                          : "border-slate-200 bg-white"
+                        }`}
+                    >
                       <input
                         name="isActive"
                         type="checkbox"
                         checked={form.isActive}
                         onChange={handleChange}
-                        className="w-4 h-4 accent-slate-900"
+                        className="h-4 w-4 accent-emerald-600"
                       />
 
-                      <span className="text-xs font-bold text-slate-700">
-                        Coupon Active
-                      </span>
+                      <div>
+                        <span className="block text-xs font-bold text-slate-800">
+                          Coupon Active
+                        </span>
+
+                        <span className="mt-0.5 block text-[9px] text-slate-400">
+                          Customers can use this coupon
+                        </span>
+                      </div>
                     </label>
+
+
+                    {/* SHOW ON CART */}
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition ${form.showOnCart
+                          ? "border-blue-200 bg-blue-50/60"
+                          : "border-slate-200 bg-white"
+                        }`}
+                    >
+                      <input
+                        name="showOnCart"
+                        type="checkbox"
+                        checked={form.showOnCart}
+                        onChange={handleChange}
+                        className="h-4 w-4 accent-blue-600"
+                      />
+
+                      <div>
+                        <span className="block text-xs font-bold text-slate-800">
+                          Show on Cart
+                        </span>
+
+                        <span className="mt-0.5 block text-[9px] text-slate-400">
+                          Display this offer in the cart
+                        </span>
+                      </div>
+                    </label>
+
                   </div>
                 </div>
               </div>

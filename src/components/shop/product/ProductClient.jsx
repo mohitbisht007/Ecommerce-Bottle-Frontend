@@ -126,10 +126,13 @@ export default function ProductClient({ initialProduct }) {
       quantity,
       currentVariant.colorName,
       selectedCapacity,
-      isCustomizing
+      isCustomizing && customText?.trim()
         ? {
             text: customText,
             font: selectedFont,
+            orientation,
+            engravingSize,
+            price: product.customizationOptions?.price || 299,
           }
         : null
     );
@@ -146,7 +149,16 @@ export default function ProductClient({ initialProduct }) {
       product,
       quantity,
       currentVariant.colorName,
-      selectedCapacity
+      selectedCapacity,
+      isCustomizing && customText?.trim()
+        ? {
+            text: customText,
+            font: selectedFont,
+            orientation,
+            engravingSize,
+            price: product.customizationOptions?.price || 299,
+          }
+        : null
     );
 
     router.push("/checkout");

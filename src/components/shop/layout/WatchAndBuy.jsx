@@ -69,7 +69,7 @@ export default function WatchAndBuy() {
     if (!targetProduct || !targetProduct._id) return;
 
     const currentVariant = targetProduct.variants?.[0] || {};
-    const selectedSize = currentVariant.capacities?.[0] || {};
+    const selectedSize = currentVariant.sizes?.[0] || currentVariant.capacities?.[0] || {};
     const color = currentVariant.colorName || currentVariant.baseColorName || "Default";
 
     const unifiedPayload = {

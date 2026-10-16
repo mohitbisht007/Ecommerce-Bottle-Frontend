@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useCart } from "@/app/context/CartContext";
 
 // --- Custom Icons ---
 const IconHeart = () => (
@@ -82,8 +83,8 @@ const IconBurger = () => (
 
 export default function Header() {
   const router = useRouter();
+  const { cartCount, setIsCartOpen } = useCart();
   const [categories, setCategories] = useState([]);
-  const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,10 +105,6 @@ export default function Header() {
       } catch (e) {
         console.error(e);
       }
-      const cart = JSON.parse(localStorage.getItem("bottle_cart") || "{}");
-      setCartCount(
-        (cart.items || []).reduce((s, it) => s + (Number(it.qty) || 0), 0)
-      );
       setUser(JSON.parse(localStorage.getItem("bottle_user") || "null"));
     };
     fetchData();
@@ -288,10 +285,15 @@ export default function Header() {
               )}
             </div>
 
-            <Link href="/checkout" className="icon-btn cart-btn">
+            <button
+              type="button"
+              className="icon-btn cart-btn"
+              onClick={() => setIsCartOpen(true)}
+              aria-label="Open cart"
+            >
               <IconCart />
               {cartCount > 0 && <span className="badge">{cartCount}</span>}
-            </Link>
+            </button>
           </div>
         </div>
 
